@@ -4,59 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Meridian Bank — Online Banking</title>
-<link rel="icon" href="data:,">
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://unpkg.com/lucide@1.16.0/dist/umd/lucide.js"></script>
 <style>
-  html, body { margin: 0; padding: 0; background: #0B1220; }
-  #root { min-height: 100vh; }
-  #boot-fallback { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-family: -apple-system, sans-serif; color: #8D97B0; background: #0B1220; font-size: 14px; }
-</style>
-</head>
-<body>
-<div id="root"><div id="boot-fallback">Loading Meridian…</div></div>
-<script type="text/babel" data-presets="react,env">
-const { useState, useEffect, useMemo, useRef } = React;
-
-/* ---- lucide icon adapter: renders from window.lucide.icons data (no lucide-react needed) ---- */
-function makeIcon(name) {
-  return function LucideIconCmp({ size = 16, color, strokeWidth = 2, style, ...rest }) {
-    const data = window.lucide && window.lucide.icons && window.lucide.icons[name];
-    if (!data) return null;
-    const children = data.map(([tag, attrs], i) => React.createElement(tag, { key: i, ...attrs }));
-    return React.createElement('svg', {
-      width: size, height: size, viewBox: '0 0 24 24', fill: 'none',
-      stroke: color || 'currentColor', strokeWidth, strokeLinecap: 'round', strokeLinejoin: 'round',
-      style: { flexShrink: 0, ...style }, ...rest
-    }, children);
-  };
-}
-const ICON_NAMES = [
-  'LayoutDashboard', 'Landmark', 'ArrowLeftRight', 'CreditCard', 'Receipt', 'PieChart',
-  'Settings', 'Bell', 'Search', 'Eye', 'EyeOff', 'Send', 'ArrowUpRight', 'ArrowDownLeft',
-  'Lock', 'Unlock', 'Plus', 'X', 'Check', 'ChevronRight', 'LogOut', 'Download', 'Filter', 'User', 'Shield',
-  'Smartphone', 'Mail', 'ChevronDown', 'Wallet', 'TrendingUp', 'TrendingDown', 'Menu', 'Snowflake',
-  'AlertTriangle', 'CheckCircle2', 'Info', 'ArrowRight', 'Copy', 'MoreHorizontal',
-  'FileText', 'HelpCircle', 'MessageSquare', 'Target', 'Gauge', 'ChevronUp', 'Fingerprint',
-];
-const ICONS = {};
-ICON_NAMES.forEach(n => { ICONS[n] = makeIcon(n); });
-const {
-  LayoutDashboard, Landmark, ArrowLeftRight, CreditCard, Receipt,
-  Bell, Search, Eye, EyeOff, Send, ArrowUpRight, ArrowDownLeft,
-  Lock, Unlock, Plus, X, Check, ChevronRight, LogOut, Download, Filter, User, Shield,
-  Smartphone, Mail, ChevronDown, Wallet, TrendingUp, TrendingDown, Menu, Snowflake,
-  AlertTriangle, CheckCircle2, Info, ArrowRight, Copy, MoreHorizontal,
-  FileText, HelpCircle, MessageSquare, Target, Gauge, ChevronUp, Fingerprint,
-} = ICONS;
-const PieIcon = ICONS.PieChart;
-const SettingsIcon = ICONS.Settings;
-
-/* ============================== STYLES ============================== */
-const STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 .mb-app {
@@ -396,68 +344,119 @@ const STYLES = `
 @media (prefers-reduced-motion: reduce) {
   .mb-acct-card, .mb-toast { transition: none; animation: none; }
 }
-`;
-
-/* ============================== DATA ============================== */
+html, body { margin: 0; padding: 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+/* Minimal hand-authored line-icon set. No external icon library needed. */
+const ICON_PATHS = {
+  menu: '<line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/>',
+  x: '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff: '<path d="M3 3l18 18"/><path d="M10.6 5.1A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a15.6 15.6 0 0 1-3.2 4.1M6.5 6.6C3.7 8.4 2 12 2 12s3.5 7 10 7c1.4 0 2.6-.3 3.7-.8"/><path d="M9.5 9.7a3 3 0 0 0 4.2 4.2"/>',
+  bell: '<path d="M18 8a6 6 0 0 0-12 0c0 5-2 6-2 6h16s-2-1-2-6"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+  chevronDown: '<polyline points="6 9 12 15 18 9"/>',
+  chevronUp: '<polyline points="18 15 12 9 6 15"/>',
+  chevronRight: '<polyline points="9 6 15 12 9 18"/>',
+  arrowRight: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+  arrowLeftRight: '<polyline points="8 3 4 7 8 11"/><line x1="4" y1="7" x2="20" y2="7"/><polyline points="16 21 20 17 16 13"/><line x1="20" y1="17" x2="4" y2="17"/>',
+  arrowUpRight: '<line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>',
+  arrowDownLeft: '<line x1="17" y1="7" x2="7" y2="17"/><polyline points="17 17 7 17 7 7"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  checkCircle: '<circle cx="12" cy="12" r="9"/><polyline points="8.5 12.5 11 15 15.5 9.5"/>',
+  alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  search: '<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  landmark: '<line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 21 8 3 8"/>',
+  card: '<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>',
+  wallet: '<path d="M20 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-3"/><path d="M17 12h.01"/><path d="M3 7V6a2 2 0 0 1 2-2h11"/>',
+  receipt: '<path d="M4 2h16v20l-3-2-3 2-3-2-3 2-3-2-1 2Z" transform="translate(0 0)"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/>',
+  send: '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+  pie: '<path d="M21.2 15.3A10 10 0 1 1 8.7 2.8"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/>',
+  shield: '<path d="M12 2 4 5v6c0 5.5 3.4 9.7 8 11 4.6-1.3 8-5.5 8-11V5Z"/>',
+  smartphone: '<rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/>',
+  mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2 6 12 13 22 6"/>',
+  trendUp: '<polyline points="3 17 9 11 13 15 21 6"/><polyline points="14 6 21 6 21 13"/>',
+  snowflake: '<line x1="12" y1="2" x2="12" y2="22"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/><line x1="19.1" y1="4.9" x2="4.9" y2="19.1"/><line x1="2" y1="12" x2="22" y2="12"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  message: '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.3-.6L3 21l1.4-4.2A8.4 8.4 0 1 1 21 11.5Z"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  lock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  download: '<path d="M12 3v12"/><polyline points="6 11 12 17 18 11"/><line x1="4" y1="21" x2="20" y2="21"/>',
+  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
+  gauge: '<path d="M12 14 15.5 9"/><circle cx="12" cy="14" r="1.5"/><path d="M3.5 18a9 9 0 1 1 17 0"/>',
+  fingerprint: '<path d="M12 3a9 9 0 0 1 9 9c0 2-.3 3.7-.8 5"/><path d="M12 3a9 9 0 0 0-9 9c0 1.3.1 2.4.3 3.4"/><path d="M12 7a5 5 0 0 1 5 5c0 3-1 5.5-2 7"/><path d="M12 7a5 5 0 0 0-5 5c0 2.5.5 4 1 5.3"/><path d="M12 11a1 1 0 0 1 1 1c0 3-1 5-3 7"/>',
+  arrowUp: '<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  more: '<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
+  info: '<circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  filter: '<polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/>',
+};
+function icon(name, size, extra) {
+  size = size || 16;
+  extra = extra || '';
+  const body = ICON_PATHS[name] || '';
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" ' + extra + '>' + body + '</svg>';
+}
 const CATEGORY_COLORS = {
   Groceries: '#7FA37A', Dining: '#C97D60', Transport: '#6E8FB0', Utilities: '#B0A16E',
   Entertainment: '#9A7FB0', Shopping: '#B07F9A', Health: '#6EAF9E', Subscriptions: '#8D97B0',
   Income: '#45BE94', Transfer: '#C9A15C', Housing: '#B0946E', Loan: '#A0785A',
 };
 
-const INITIAL_ACCOUNTS = [
+let accounts = [
   { id: 'chk', name: 'Everyday Checking', type: 'checking', number: '4001 2348 8421', balance: 12480.32, gradient: 'linear-gradient(155deg, #1A2740, #24365A)' },
   { id: 'sav', name: 'High-Yield Savings', type: 'savings', number: '4009 8765 7743', balance: 48210.90, apy: 4.25, gradient: 'linear-gradient(155deg, #2A2113, #4A3A1D)' },
   { id: 'cc', name: 'Meridian Rewards Card', type: 'credit', number: '4551 0099 0099', balance: -1240.55, limit: 10000, gradient: 'linear-gradient(155deg, #12161f, #1c2230)' },
 ];
 
 const RAW_TX = [
-  ['2026-08-07','Blue Bottle Coffee','Dining','chk',-6.75],
-  ['2026-08-07','Whole Foods Market','Groceries','chk',-84.12],
-  ['2026-08-06','Meridian Payroll — Acme Co.','Income','chk',3120.00],
-  ['2026-08-06','Uber','Transport','cc',-18.40],
-  ['2026-08-05','Netflix','Subscriptions','cc',-15.49],
-  ['2026-08-05','Con Edison','Utilities','chk',-118.40],
-  ['2026-08-04','Trader Joe\'s','Groceries','chk',-52.30],
-  ['2026-08-04','Transfer to Savings','Transfer','chk',-500.00],
-  ['2026-08-04','Transfer from Checking','Transfer','sav',500.00],
-  ['2026-08-03','Shell Gas Station','Transport','cc',-41.20],
-  ['2026-08-03','Iron Gym Membership','Health','chk',-45.00],
-  ['2026-08-02','Amazon','Shopping','cc',-67.88],
-  ['2026-08-01','Xfinity Internet','Utilities','chk',-79.99],
-  ['2026-07-31','Sweetgreen','Dining','cc',-14.25],
-  ['2026-07-30','Ally Auto Loan','Loan','chk',-412.60],
-  ['2026-07-29','Spotify','Subscriptions','cc',-11.99],
-  ['2026-07-28','Regal Cinemas','Entertainment','cc',-32.00],
-  ['2026-07-27','Trader Joe\'s','Groceries','chk',-61.05],
-  ['2026-07-26','CVS Pharmacy','Health','cc',-22.14],
-  ['2026-07-25','Skyline Realty — Rent','Housing','chk',-2100.00],
-  ['2026-07-24','Chipotle','Dining','cc',-13.40],
-  ['2026-07-23','Interest Payment','Income','sav',171.20],
-  ['2026-07-22','Target','Shopping','cc',-98.60],
-  ['2026-07-21','Delta Airlines','Transport','cc',-340.00],
-  ['2026-07-20','Meridian Payroll — Acme Co.','Income','chk',3120.00],
-  ['2026-07-19','Whole Foods Market','Groceries','chk',-73.44],
-  ['2026-07-18','MTA Metrocard','Transport','chk',-33.00],
-  ['2026-07-17','Blue Bottle Coffee','Dining','cc',-5.50],
-  ['2026-07-16','Apple.com/bill','Subscriptions','cc',-9.99],
-  ['2026-07-14','Con Edison','Utilities','chk',-104.80],
-  ['2026-07-12','Nike.com','Shopping','cc',-129.00],
-  ['2026-07-11','Whole Foods Market','Groceries','chk',-45.90],
-  ['2026-07-10','Iron Gym Membership','Health','chk',-45.00],
+  ['2026-08-07','Blue Bottle Coffee','Dining','chk',-6.75,'pending'],
+  ['2026-08-07','Whole Foods Market','Groceries','chk',-84.12,'pending'],
+  ['2026-08-06','Meridian Payroll — Acme Co.','Income','chk',3120.00,'posted'],
+  ['2026-08-06','Uber','Transport','cc',-18.40,'posted'],
+  ['2026-08-05','Netflix','Subscriptions','cc',-15.49,'posted'],
+  ['2026-08-05','Con Edison','Utilities','chk',-118.40,'posted'],
+  ["2026-08-04","Trader Joe's",'Groceries','chk',-52.30,'posted'],
+  ['2026-08-04','Transfer to Savings','Transfer','chk',-500.00,'posted'],
+  ['2026-08-04','Transfer from Checking','Transfer','sav',500.00,'posted'],
+  ['2026-08-03','Shell Gas Station','Transport','cc',-41.20,'posted'],
+  ['2026-08-03','Iron Gym Membership','Health','chk',-45.00,'posted'],
+  ['2026-08-02','Amazon','Shopping','cc',-67.88,'posted'],
+  ['2026-08-01','Xfinity Internet','Utilities','chk',-79.99,'posted'],
+  ['2026-07-31','Sweetgreen','Dining','cc',-14.25,'posted'],
+  ['2026-07-30','Ally Auto Loan','Loan','chk',-412.60,'posted'],
+  ['2026-07-29','Spotify','Subscriptions','cc',-11.99,'posted'],
+  ['2026-07-28','Regal Cinemas','Entertainment','cc',-32.00,'posted'],
+  ["2026-07-27","Trader Joe's",'Groceries','chk',-61.05,'posted'],
+  ['2026-07-26','CVS Pharmacy','Health','cc',-22.14,'posted'],
+  ['2026-07-25','Skyline Realty — Rent','Housing','chk',-2100.00,'posted'],
+  ['2026-07-24','Chipotle','Dining','cc',-13.40,'posted'],
+  ['2026-07-23','Interest Payment','Income','sav',171.20,'posted'],
+  ['2026-07-22','Target','Shopping','cc',-98.60,'posted'],
+  ['2026-07-21','Delta Airlines','Transport','cc',-340.00,'posted'],
+  ['2026-07-20','Meridian Payroll — Acme Co.','Income','chk',3120.00,'posted'],
+  ['2026-07-19','Whole Foods Market','Groceries','chk',-73.44,'posted'],
+  ['2026-07-18','MTA Metrocard','Transport','chk',-33.00,'posted'],
+  ['2026-07-17','Blue Bottle Coffee','Dining','cc',-5.50,'posted'],
+  ['2026-07-16','Apple.com/bill','Subscriptions','cc',-9.99,'posted'],
+  ['2026-07-14','Con Edison','Utilities','chk',-104.80,'posted'],
+  ['2026-07-12','Nike.com','Shopping','cc',-129.00,'posted'],
+  ['2026-07-11','Whole Foods Market','Groceries','chk',-45.90,'posted'],
+  ['2026-07-10','Iron Gym Membership','Health','chk',-45.00,'posted'],
 ];
+let transactions = RAW_TX.map((t, i) => ({ id: 'tx' + i, date: t[0], merchant: t[1], category: t[2], accountId: t[3], amount: t[4], status: t[5] }));
 
-const INITIAL_TRANSACTIONS = RAW_TX.map((t, i) => ({
-  id: 'tx' + i, date: t[0], merchant: t[1], category: t[2], accountId: t[3], amount: t[4],
-  status: i < 2 ? 'pending' : 'posted',
-}));
-
-const INITIAL_CARDS = [
+let cards = [
   { id: 'card1', accountId: 'chk', type: 'debit', network: 'Visa', last4: '4821', holder: 'A. Mensah', expiry: '09/29', frozen: false, dark: false },
   { id: 'card2', accountId: 'cc', type: 'credit', network: 'Mastercard', last4: '0099', holder: 'A. Mensah', expiry: '03/28', frozen: false, dark: true, limit: 10000 },
 ];
 
-const INITIAL_PAYEES = [
+let payees = [
   { id: 'p1', name: 'Con Edison', category: 'Utilities', avgAmount: 118.40, nextDue: '2026-08-14', autopay: true },
   { id: 'p2', name: 'Skyline Realty (Rent)', category: 'Housing', avgAmount: 2100.00, nextDue: '2026-09-01', autopay: false },
   { id: 'p3', name: 'Xfinity Internet', category: 'Utilities', avgAmount: 79.99, nextDue: '2026-08-20', autopay: true },
@@ -466,6 +465,12 @@ const INITIAL_PAYEES = [
 ];
 
 const BUDGET_LIMITS = { Groceries: 500, Dining: 250, Transport: 350, Entertainment: 120, Shopping: 300, Subscriptions: 60 };
+
+const GOALS = [
+  { id: 'g1', name: 'Emergency Fund', target: 10000, saved: 8200, color: '#45BE94' },
+  { id: 'g2', name: 'Trip to Tokyo', target: 5000, saved: 2100, color: '#C9A15C' },
+  { id: 'g3', name: 'New Laptop', target: 2200, saved: 1980, color: '#6E8FB0' },
+];
 
 const TREND = [
   { month: 'Mar', income: 5240, spending: 3820 },
@@ -477,29 +482,10 @@ const TREND = [
 ];
 
 const NOTIFICATIONS = [
-  { id: 1, title: 'Autopay scheduled', body: 'Con Edison — $118.40 will be paid Aug 14 from Everyday Checking.', time: '2h ago', icon: Receipt },
-  { id: 2, title: 'Payment due soon', body: 'Ally Auto Loan payment of $412.60 is due in 5 days.', time: '1d ago', icon: AlertTriangle },
-  { id: 3, title: 'New device sign-in', body: 'Your account was accessed from a new device. Was this you?', time: '2d ago', icon: Shield },
-  { id: 4, title: 'Savings interest posted', body: 'You earned $171.20 in interest this cycle.', time: '3d ago', icon: TrendingUp },
-];
-
-const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'accounts', label: 'Accounts', icon: Landmark },
-  { id: 'transactions', label: 'Transactions', icon: Receipt },
-  { id: 'transfers', label: 'Transfers', icon: ArrowLeftRight },
-  { id: 'cards', label: 'Cards', icon: CreditCard },
-  { id: 'billpay', label: 'Bill Pay', icon: Send },
-  { id: 'budget', label: 'Budget', icon: PieIcon },
-  { id: 'statements', label: 'Statements', icon: FileText },
-  { id: 'support', label: 'Support', icon: HelpCircle },
-  { id: 'settings', label: 'Settings', icon: SettingsIcon },
-];
-
-const INITIAL_GOALS = [
-  { id: 'g1', name: 'Emergency Fund', target: 10000, saved: 8200, color: '#45BE94' },
-  { id: 'g2', name: 'Trip to Tokyo', target: 5000, saved: 2100, color: '#C9A15C' },
-  { id: 'g3', name: 'New Laptop', target: 2200, saved: 1980, color: '#6E8FB0' },
+  { id: 1, title: 'Autopay scheduled', body: 'Con Edison — $118.40 will be paid Aug 14 from Everyday Checking.', time: '2h ago', icon: 'receipt' },
+  { id: 2, title: 'Payment due soon', body: 'Ally Auto Loan payment of $412.60 is due in 5 days.', time: '1d ago', icon: 'alert' },
+  { id: 3, title: 'New device sign-in', body: 'Your account was accessed from a new device. Was this you?', time: '2d ago', icon: 'shield' },
+  { id: 4, title: 'Savings interest posted', body: 'You earned $171.20 in interest this cycle.', time: '3d ago', icon: 'trendUp' },
 ];
 
 const STATEMENTS = [
@@ -518,7 +504,18 @@ const FAQS = [
   { q: 'How long do transfers take?', a: 'Transfers between your own Meridian accounts are instant. Transfers to other people typically arrive within minutes to 1 business day.' },
 ];
 
-/* ============================== HELPERS ============================== */
+const NAV_ITEMS = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'landmark' },
+  { id: 'accounts', label: 'Accounts', icon: 'wallet' },
+  { id: 'transactions', label: 'Transactions', icon: 'receipt' },
+  { id: 'transfers', label: 'Transfers', icon: 'arrowLeftRight' },
+  { id: 'cards', label: 'Cards', icon: 'card' },
+  { id: 'billpay', label: 'Bill Pay', icon: 'send' },
+  { id: 'budget', label: 'Budget', icon: 'pie' },
+  { id: 'statements', label: 'Statements', icon: 'file' },
+  { id: 'support', label: 'Support', icon: 'help' },
+  { id: 'settings', label: 'Settings', icon: 'gear' },
+];
 function money(n, hide) {
   if (hide) return '••••••';
   const sign = n < 0 ? '-' : '';
@@ -527,1280 +524,251 @@ function money(n, hide) {
 function fmtDate(d) {
   return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
-function useCountUp(target, duration = 800) {
-  const [val, setVal] = useState(0);
-  const raf = useRef(null);
-  useEffect(() => {
-    const reduce = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) { setVal(target); return; }
-    const start = performance.now();
-    const from = 0;
-    function tick(now) {
-      const p = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setVal(from + (target - from) * eased);
-      if (p < 1) raf.current = requestAnimationFrame(tick);
-    }
-    raf.current = requestAnimationFrame(tick);
-    return () => raf.current && cancelAnimationFrame(raf.current);
-  }, [target, duration]);
-  return val;
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 function uid() { return Math.random().toString(36).slice(2, 10); }
-
-/* ============================== MINI CHARTS (no external chart lib) ============================== */
-function MiniAreaChart({ data }) {
+function catDot(cat) { return '<span class="mb-cat-dot" style="background:' + (CATEGORY_COLORS[cat] || '#888') + '"></span>'; }
+function switchHtml(on, action) {
+  return '<button type="button" class="mb-switch' + (on ? ' on' : '') + '" onclick="' + action + '"><span class="mb-switch-dot"></span></button>';
+}
+function miniAreaChart(data) {
   const w = 560, h = 220, padL = 34, padR = 8, padT = 10, padB = 22;
-  const max = Math.max(...data.map(d => Math.max(d.income, d.spending))) * 1.1;
+  const max = Math.max.apply(null, data.map(d => Math.max(d.income, d.spending))) * 1.1;
   const x = i => padL + (i / (data.length - 1)) * (w - padL - padR);
   const y = v => padT + (1 - v / max) * (h - padT - padB);
   const line = key => data.map((d, i) => (i === 0 ? 'M' : 'L') + x(i) + ' ' + y(d[key])).join(' ');
-  const area = key => line(key) + ` L ${x(data.length - 1)} ${h - padB} L ${x(0)} ${h - padB} Z`;
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height="100%" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#45BE94" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#45BE94" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#E27467" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#E27467" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {[0, 0.5, 1].map(f => (
-        <line key={f} x1={padL} x2={w - padR} y1={padT + f * (h - padT - padB)} y2={padT + f * (h - padT - padB)} stroke="var(--hairline)" strokeWidth="1" />
-      ))}
-      <path d={area('income')} fill="url(#incomeGrad)" />
-      <path d={area('spending')} fill="url(#spendGrad)" />
-      <path d={line('income')} fill="none" stroke="#45BE94" strokeWidth="2" />
-      <path d={line('spending')} fill="none" stroke="#E27467" strokeWidth="2" />
-      {data.map((d, i) => (
-        <text key={i} x={x(i)} y={h - 4} fontSize="10.5" fill="var(--muted)" textAnchor="middle">{d.month}</text>
-      ))}
-    </svg>
-  );
+  const area = key => line(key) + ' L ' + x(data.length - 1) + ' ' + (h - padB) + ' L ' + x(0) + ' ' + (h - padB) + ' Z';
+  let gridLines = '';
+  [0, 0.5, 1].forEach(f => {
+    const yy = padT + f * (h - padT - padB);
+    gridLines += '<line x1="' + padL + '" x2="' + (w - padR) + '" y1="' + yy + '" y2="' + yy + '" stroke="var(--hairline)" stroke-width="1"/>';
+  });
+  let labels = '';
+  data.forEach((d, i) => { labels += '<text x="' + x(i) + '" y="' + (h - 4) + '" font-size="10.5" fill="var(--muted)" text-anchor="middle">' + d.month + '</text>'; });
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="100%" preserveAspectRatio="none">' +
+    '<defs><linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#45BE94" stop-opacity="0.35"/><stop offset="100%" stop-color="#45BE94" stop-opacity="0"/></linearGradient>' +
+    '<linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E27467" stop-opacity="0.3"/><stop offset="100%" stop-color="#E27467" stop-opacity="0"/></linearGradient></defs>' +
+    gridLines +
+    '<path d="' + area('income') + '" fill="url(#incomeGrad)"/>' +
+    '<path d="' + area('spending') + '" fill="url(#spendGrad)"/>' +
+    '<path d="' + line('income') + '" fill="none" stroke="#45BE94" stroke-width="2"/>' +
+    '<path d="' + line('spending') + '" fill="none" stroke="#E27467" stroke-width="2"/>' +
+    labels + '</svg>';
 }
 
-function MiniBarChart({ data }) {
+function miniBarChart(data) {
   const w = 560, h = 240, padL = 34, padR = 8, padT = 10, padB = 22;
-  const max = Math.max(...data.map(d => Math.max(d.income, d.spending))) * 1.15;
+  const max = Math.max.apply(null, data.map(d => Math.max(d.income, d.spending))) * 1.15;
   const groupW = (w - padL - padR) / data.length;
   const barW = groupW * 0.3;
   const y = v => padT + (1 - v / max) * (h - padT - padB);
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height="100%" preserveAspectRatio="none">
-      {[0, 0.5, 1].map(f => (
-        <line key={f} x1={padL} x2={w - padR} y1={padT + f * (h - padT - padB)} y2={padT + f * (h - padT - padB)} stroke="var(--hairline)" strokeWidth="1" />
-      ))}
-      {data.map((d, i) => {
-        const gx = padL + i * groupW + groupW / 2;
-        return (
-          <g key={i}>
-            <rect x={gx - barW - 2} y={y(d.income)} width={barW} height={(h - padB) - y(d.income)} fill="#45BE94" rx="2" />
-            <rect x={gx + 2} y={y(d.spending)} width={barW} height={(h - padB) - y(d.spending)} fill="#E27467" rx="2" />
-            <text x={gx} y={h - 4} fontSize="10.5" fill="var(--muted)" textAnchor="middle">{d.month}</text>
-          </g>
-        );
-      })}
-    </svg>
-  );
+  let gridLines = '';
+  [0, 0.5, 1].forEach(f => {
+    const yy = padT + f * (h - padT - padB);
+    gridLines += '<line x1="' + padL + '" x2="' + (w - padR) + '" y1="' + yy + '" y2="' + yy + '" stroke="var(--hairline)" stroke-width="1"/>';
+  });
+  let bars = '';
+  data.forEach((d, i) => {
+    const gx = padL + i * groupW + groupW / 2;
+    bars += '<rect x="' + (gx - barW - 2) + '" y="' + y(d.income) + '" width="' + barW + '" height="' + ((h - padB) - y(d.income)) + '" fill="#45BE94" rx="2"/>';
+    bars += '<rect x="' + (gx + 2) + '" y="' + y(d.spending) + '" width="' + barW + '" height="' + ((h - padB) - y(d.spending)) + '" fill="#E27467" rx="2"/>';
+    bars += '<text x="' + gx + '" y="' + (h - 4) + '" font-size="10.5" fill="var(--muted)" text-anchor="middle">' + d.month + '</text>';
+  });
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="100%" preserveAspectRatio="none">' + gridLines + bars + '</svg>';
 }
 
-function MiniDonut({ data }) {
+function miniDonut(data) {
   const size = 200, cx = size / 2, cy = size / 2, rOuter = 90, rInner = 55;
   const total = data.reduce((s, d) => s + d.value, 0) || 1;
-  let angle = -90;
-  const arcs = data.map(d => {
+  let angle = -90, paths = '';
+  data.forEach(d => {
     const sweep = (d.value / total) * 360;
-    const start = angle;
-    const end = angle + sweep - 2;
+    const start = angle, end = angle + sweep - 2;
     angle += sweep;
     const toXY = (a, r) => [cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)];
-    const [x1, y1] = toXY(start, rOuter), [x2, y2] = toXY(end, rOuter);
-    const [x3, y3] = toXY(end, rInner), [x4, y4] = toXY(start, rInner);
+    const p1 = toXY(start, rOuter), p2 = toXY(end, rOuter), p3 = toXY(end, rInner), p4 = toXY(start, rInner);
     const large = (end - start) > 180 ? 1 : 0;
-    const path = `M ${x1} ${y1} A ${rOuter} ${rOuter} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${rInner} ${rInner} 0 ${large} 0 ${x4} ${y4} Z`;
-    return { path, color: CATEGORY_COLORS[d.name] || '#888', name: d.name };
+    const d1 = 'M ' + p1[0] + ' ' + p1[1] + ' A ' + rOuter + ' ' + rOuter + ' 0 ' + large + ' 1 ' + p2[0] + ' ' + p2[1] +
+      ' L ' + p3[0] + ' ' + p3[1] + ' A ' + rInner + ' ' + rInner + ' 0 ' + large + ' 0 ' + p4[0] + ' ' + p4[1] + ' Z';
+    paths += '<path d="' + d1 + '" fill="' + (CATEGORY_COLORS[d.name] || '#888') + '" stroke="var(--surface)" stroke-width="2"/>';
   });
-  return (
-    <svg viewBox={`0 0 ${size} ${size}`} width="100%" height="100%" style={{ maxWidth: 220, display: 'block', margin: '0 auto' }}>
-      {arcs.map((a, i) => <path key={i} d={a.path} fill={a.color} stroke="var(--surface)" strokeWidth="2" />)}
-    </svg>
-  );
+  return '<svg viewBox="0 0 ' + size + ' ' + size + '" width="100%" height="100%" style="max-width:220px;display:block;margin:0 auto">' + paths + '</svg>';
+}
+/* ============================== STATE ============================== */
+const state = {
+  loggedIn: false,
+  authView: 'home',   // 'home' | 'login'
+  page: 'dashboard',
+  theme: 'dark',
+  hide: false,
+  profile: { name: 'Ama Mensah', email: 'ama.mensah@email.com', phone: '(555) 019-2231' },
+  toasts: [],
+  notifOpen: false,
+  avatarOpen: false,
+  modal: null,
+  txFilter: 'all',
+  transfer: { mode: 'internal', step: 'form', error: '' },
+  openFaq: 0,
+  revealCvv: {},
+};
+
+function addToast(message, type) {
+  const id = uid();
+  state.toasts.push({ id: id, message: message, type: type || 'success' });
+  renderToasts();
+  setTimeout(() => { state.toasts = state.toasts.filter(t => t.id !== id); renderToasts(); }, 3500);
+}
+function renderToasts() {
+  const el = document.getElementById('toast-stack');
+  if (!el) return;
+  el.innerHTML = state.toasts.map(t =>
+    '<div class="mb-toast">' + icon(t.type === 'error' ? 'alert' : 'checkCircle', 16, 'style="color:' + (t.type === 'error' ? 'var(--coral)' : 'var(--teal)') + '"') +
+    '<span>' + esc(t.message) + '</span></div>'
+  ).join('');
 }
 
-
-/* ============================== SMALL UI PARTS ============================== */
-function Switch({ on, onClick }) {
-  return (
-    <button className={'mb-switch' + (on ? ' on' : '')} onClick={onClick} aria-pressed={on} type="button">
-      <span className="mb-switch-dot" />
-    </button>
-  );
+function updateBalance(accountId, delta) {
+  accounts = accounts.map(a => a.id === accountId ? Object.assign({}, a, { balance: a.balance + delta }) : a);
 }
 
-function Modal({ title, onClose, children }) {
-  return (
-    <div className="mb-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="mb-modal">
-        <div className="mb-modal-head">
-          <h3>{title}</h3>
-          <button className="mb-icon-btn" onClick={onClose} type="button"><X size={16} /></button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
+/* ============================== ROOT RENDER ============================== */
+function render() {
+  const root = document.getElementById('root');
+  document.body.className = '';
+  if (!state.loggedIn) {
+    root.innerHTML = '<div class="mb-app" data-theme="' + state.theme + '">' +
+      (state.authView === 'home' ? renderHomePage() : renderLoginPage()) +
+      '</div>';
+    return;
+  }
+  root.innerHTML = '<div class="mb-app" data-theme="' + state.theme + '">' + renderShell() + '</div>' +
+    renderModal() + '<div class="mb-toast-stack" id="toast-stack"></div>';
+  renderToasts();
 }
 
-function Toasts({ toasts }) {
-  return (
-    <div className="mb-toast-stack">
-      {toasts.map(t => (
-        <div className="mb-toast" key={t.id}>
-          {t.type === 'error' ? <AlertTriangle size={16} color="var(--coral)" /> : <CheckCircle2 size={16} color="var(--teal)" />}
-          <span>{t.message}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CategoryDot({ cat }) {
-  return <span className="mb-cat-dot" style={{ background: CATEGORY_COLORS[cat] || '#888' }} />;
-}
-
-function AccountVisualCard({ acct, hide, onClick }) {
-  const isCredit = acct.type === 'credit';
-  return (
-    <div className="mb-acct-card" style={{ background: acct.gradient }} onClick={onClick}>
-      <div>
-        <div className="mb-acct-type" style={{ color: '#C9A15C' }}>{acct.type}</div>
-        <div className="mb-acct-name">{acct.name}</div>
-        <div className="mb-acct-num num">•••• {acct.number.slice(-4)}</div>
-      </div>
-      <div className="mb-acct-balance num">
-        {isCredit ? money(Math.abs(acct.balance), hide) + ' owed' : money(acct.balance, hide)}
-      </div>
-    </div>
-  );
-}
-
-/* ============================== PAGES ============================== */
-function HomePage({ onSignIn }) {
-  const [navOpen, setNavOpen] = useState(null);
+/* ============================== HOME ============================== */
+function renderHomePage() {
   const products = [
-    { icon: Landmark, title: 'Checking accounts', body: 'No monthly fee with direct deposit. Free overdraft cushion up to $50.', cta: 'Compare checking' },
-    { icon: Wallet, title: 'Savings & CDs', body: 'Earn 4.25% APY on savings with no minimum balance to open.', cta: 'See savings rates' },
-    { icon: CreditCard, title: 'Credit cards', body: 'Cash back, travel rewards, and low-interest cards — find your fit.', cta: 'Explore cards' },
-    { icon: Receipt, title: 'Loans & mortgages', body: 'Home loans, auto loans, and personal loans with rate-match guarantee.', cta: 'Check rates' },
-    { icon: TrendingUp, title: 'Investing & retirement', body: 'Managed portfolios and IRAs with no advisory fee for your first year.', cta: 'Start investing' },
-    { icon: Shield, title: 'Business banking', body: 'Business checking, merchant services, and lines of credit for growing teams.', cta: 'For your business' },
+    ['landmark', 'Checking accounts', 'No monthly fee with direct deposit. Free overdraft cushion up to $50.', 'Compare checking'],
+    ['wallet', 'Savings & CDs', 'Earn 4.25% APY on savings with no minimum balance to open.', 'See savings rates'],
+    ['card', 'Credit cards', 'Cash back, travel rewards, and low-interest cards — find your fit.', 'Explore cards'],
+    ['receipt', 'Loans & mortgages', 'Home loans, auto loans, and personal loans with rate-match guarantee.', 'Check rates'],
+    ['trendUp', 'Investing & retirement', 'Managed portfolios and IRAs with no advisory fee for your first year.', 'Start investing'],
+    ['shield', 'Business banking', 'Business checking, merchant services, and lines of credit for growing teams.', 'For your business'],
   ];
   const trust = [
-    { icon: Shield, label: 'FDIC insured up to $250,000' },
-    { icon: Fingerprint, label: 'Biometric & 2FA on every login' },
-    { icon: Gauge, label: '24/7 real-time fraud monitoring' },
+    ['shield', 'FDIC insured up to $250,000'],
+    ['fingerprint', 'Biometric & 2FA on every login'],
+    ['gauge', '24/7 real-time fraud monitoring'],
   ];
-
-  return (
-    <div className="mb-corp">
-      <div className="mb-util-bar">
-        <div className="mb-util-inner">
-          <div className="mb-util-links">
-            <span>Personal</span><span>Business</span><span>Wealth</span>
-          </div>
-          <div className="mb-util-links">
-            <span>Find a branch</span><span>1-800-555-0182</span><span>EN | ES</span>
-          </div>
-        </div>
-      </div>
-
-      <header className="mb-corp-nav">
-        <div className="mb-corp-nav-inner">
-          <div className="mb-brand">
-            <div className="mb-brand-mark">M</div>
-            <div className="mb-brand-name" style={{ fontSize: 20 }}>Meridian</div>
-          </div>
-          <nav className="mb-corp-links">
-            {['Checking', 'Savings', 'Credit Cards', 'Loans', 'Investing', 'Business'].map(item => (
-              <button key={item} className="mb-corp-link" onMouseEnter={() => setNavOpen(item)} onMouseLeave={() => setNavOpen(null)} type="button">
-                {item} <ChevronDown size={13} />
-              </button>
-            ))}
-          </nav>
-          <div className="mb-flex mb-gap-12">
-            <button className="mb-icon-btn" type="button" aria-label="Search"><Search size={16} /></button>
-            <button className="mb-btn mb-btn-primary sm" onClick={onSignIn} type="button">Sign in</button>
-          </div>
-        </div>
-      </header>
-
-      <section className="mb-corp-hero">
-        <div className="mb-corp-hero-inner">
-          <div className="mb-corp-hero-copy">
-            <div className="mb-eyebrow">Limited-time offer</div>
-            <h1 className="display">Earn $300 when you open a checking account.</h1>
-            <p className="mb-muted" style={{ fontSize: 15, maxWidth: 480, marginTop: 14 }}>
-              Open a Meridian Everyday Checking account and set up direct deposit within 60 days to get $300 — plus no monthly fees, ever.
-            </p>
-            <div className="mb-flex mb-gap-12 mb-mt-24">
-              <button className="mb-btn mb-btn-primary" onClick={onSignIn} type="button">Open an account <ArrowRight size={15} /></button>
-              <button className="mb-btn mb-btn-secondary" onClick={onSignIn} type="button">See offer details</button>
-            </div>
-            <div className="mb-hero-trust mb-mt-24"><Shield size={14} /> Member FDIC · Equal Housing Lender</div>
-          </div>
-          <div className="mb-corp-hero-visual">
-            <div className="mb-plastic" style={{ background: 'linear-gradient(155deg, #1A2740, #24365A)' }}>
-              <div className="mb-plastic-top">
-                <div className="mb-plastic-chip" />
-                <div style={{ fontSize: 13, fontWeight: 700 }}>Visa</div>
-              </div>
-              <div>
-                <div className="mb-plastic-num">•••• •••• •••• 4821</div>
-                <div className="mb-plastic-bottom mb-mt-8">
-                  <div><div style={{ opacity: .7, fontSize: 9 }}>CARD HOLDER</div><div>A. Mensah</div></div>
-                  <div><div style={{ opacity: .7, fontSize: 9 }}>EXPIRES</div><div className="num">09/29</div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="mb-quicklinks-strip">
-        <div className="mb-corp-inner mb-quicklinks-grid">
-          {[
-            { icon: Landmark, label: 'Open an account' },
-            { icon: Send, label: 'Pay bills' },
-            { icon: Search, label: 'Find a branch or ATM' },
-            { icon: HelpCircle, label: 'Customer service' },
-          ].map(q => {
-            const Icon = q.icon;
-            return (
-              <button key={q.label} className="mb-quicklink" onClick={onSignIn} type="button">
-                <Icon size={17} /> {q.label}
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="mb-corp-inner mb-home-section">
-        <div className="mb-section-head"><h2 style={{ fontSize: 22 }}>Banking built around you</h2></div>
-        <div className="mb-ledger-rule" />
-        <div className="mb-feature-grid">
-          {products.map(f => {
-            const Icon = f.icon;
-            return (
-              <div className="mb-feature-card" key={f.title}>
-                <div className="mb-quick-icon"><Icon size={18} /></div>
-                <div style={{ fontWeight: 600, fontSize: 14.5, marginTop: 12 }}>{f.title}</div>
-                <div className="mb-muted" style={{ fontSize: 12.5, marginTop: 6, lineHeight: 1.6 }}>{f.body}</div>
-                <button className="mb-link mb-mt-16" onClick={onSignIn} type="button" style={{ padding: 0 }}>{f.cta} <ChevronRight size={13} /></button>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="mb-rate-banner">
-        <div className="mb-corp-inner mb-rate-banner-inner">
-          <div>
-            <div className="mb-eyebrow" style={{ color: '#14100a' }}>Savings rate</div>
-            <div className="display" style={{ fontSize: 34, fontWeight: 600, color: '#14100a' }}>4.25% APY</div>
-            <div style={{ fontSize: 12.5, color: '#3a2e15' }}>On our High-Yield Savings account — no minimum balance.</div>
-          </div>
-          <button className="mb-btn" style={{ background: '#14100a', color: '#fff' }} onClick={onSignIn} type="button">Open savings <ArrowRight size={14} /></button>
-        </div>
-      </section>
-
-      <section className="mb-corp-inner mb-home-section">
-        <div className="mb-security-row">
-          <div style={{ flex: 1, minWidth: 260 }}>
-            <div className="mb-section-head"><h2 style={{ fontSize: 20 }}>Security is not a feature. It's the foundation.</h2></div>
-            <p className="mb-muted" style={{ fontSize: 13, marginTop: 8, lineHeight: 1.7, maxWidth: 480 }}>
-              Every account is protected by two-factor authentication, real-time fraud monitoring, and instant card freezing.
-            </p>
-            <div className="mb-trust-list mb-mt-16">
-              {trust.map(t => {
-                const Icon = t.icon;
-                return <div key={t.label} className="mb-trust-item"><Icon size={15} /> {t.label}</div>;
-              })}
-            </div>
-          </div>
-          <div className="mb-app-download">
-            <div style={{ fontWeight: 600, fontSize: 14.5, marginBottom: 4 }}>Bank on the go</div>
-            <div className="mb-muted" style={{ fontSize: 12.5, marginBottom: 14 }}>Get the Meridian app for iOS and Android.</div>
-            <div className="mb-flex mb-gap-12">
-              <button className="mb-store-btn" onClick={onSignIn} type="button">
-                <Smartphone size={16} /><div><div style={{ fontSize: 8.5, opacity: .75 }}>Download on the</div><div style={{ fontSize: 12.5, fontWeight: 600 }}>App Store</div></div>
-              </button>
-              <button className="mb-store-btn" onClick={onSignIn} type="button">
-                <Smartphone size={16} /><div><div style={{ fontSize: 8.5, opacity: .75 }}>Get it on</div><div style={{ fontSize: 12.5, fontWeight: 600 }}>Google Play</div></div>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <footer className="mb-corp-footer">
-        <div className="mb-corp-inner">
-          <div className="mb-footer-cols">
-            <div>
-              <div className="mb-footer-h">Banking</div>
-              <div className="mb-muted mb-footer-link">Checking</div>
-              <div className="mb-muted mb-footer-link">Savings & CDs</div>
-              <div className="mb-muted mb-footer-link">Credit cards</div>
-              <div className="mb-muted mb-footer-link">Loans & mortgages</div>
-            </div>
-            <div>
-              <div className="mb-footer-h">Company</div>
-              <div className="mb-muted mb-footer-link">About Meridian</div>
-              <div className="mb-muted mb-footer-link">Careers</div>
-              <div className="mb-muted mb-footer-link">Newsroom</div>
-              <div className="mb-muted mb-footer-link">Investor relations</div>
-            </div>
-            <div>
-              <div className="mb-footer-h">Support</div>
-              <div className="mb-muted mb-footer-link">Help center</div>
-              <div className="mb-muted mb-footer-link">Security center</div>
-              <div className="mb-muted mb-footer-link">Contact us</div>
-              <div className="mb-muted mb-footer-link">Locations & ATMs</div>
-            </div>
-            <div>
-              <div className="mb-footer-h">Legal</div>
-              <div className="mb-muted mb-footer-link">Privacy policy</div>
-              <div className="mb-muted mb-footer-link">Terms of use</div>
-              <div className="mb-muted mb-footer-link">Accessibility</div>
-              <div className="mb-muted mb-footer-link">Deposit agreement</div>
-            </div>
-          </div>
-          <div className="mb-footer-fine mb-muted">
-            © 2026 Meridian Bank, N.A. Member FDIC. Equal Housing Lender. Deposits insured up to $250,000 per depositor. This is a demo interface for illustration only — no real accounts are connected.
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
+  return '<div class="mb-corp">' +
+    '<div class="mb-util-bar"><div class="mb-util-inner">' +
+      '<div class="mb-util-links"><span>Personal</span><span>Business</span><span>Wealth</span></div>' +
+      '<div class="mb-util-links"><span>Find a branch</span><span>1-800-555-0182</span><span>EN | ES</span></div>' +
+    '</div></div>' +
+    '<header class="mb-corp-nav"><div class="mb-corp-nav-inner">' +
+      '<div class="mb-brand"><div class="mb-brand-mark">M</div><div class="mb-brand-name" style="font-size:20px">Meridian</div></div>' +
+      '<nav class="mb-corp-links">' + ['Checking','Savings','Credit Cards','Loans','Investing','Business'].map(i => '<button type="button" class="mb-corp-link">' + i + ' ' + icon('chevronDown', 13) + '</button>').join('') + '</nav>' +
+      '<div class="mb-flex mb-gap-12">' +
+        '<button type="button" class="mb-icon-btn" aria-label="Search">' + icon('search', 16) + '</button>' +
+        '<button type="button" class="mb-btn mb-btn-primary sm" onclick="goSignIn()">Sign in</button>' +
+      '</div>' +
+    '</div></header>' +
+    '<section class="mb-corp-hero"><div class="mb-corp-hero-inner">' +
+      '<div class="mb-corp-hero-copy">' +
+        '<div class="mb-eyebrow">Limited-time offer</div>' +
+        '<h1 class="display">Earn $300 when you open a checking account.</h1>' +
+        '<p class="mb-muted" style="font-size:15px;max-width:480px;margin-top:14px">Open a Meridian Everyday Checking account and set up direct deposit within 60 days to get $300 — plus no monthly fees, ever.</p>' +
+        '<div class="mb-flex mb-gap-12 mb-mt-24">' +
+          '<button type="button" class="mb-btn mb-btn-primary" onclick="goSignIn()">Open an account ' + icon('arrowRight', 15) + '</button>' +
+          '<button type="button" class="mb-btn mb-btn-secondary" onclick="goSignIn()">See offer details</button>' +
+        '</div>' +
+        '<div class="mb-hero-trust mb-mt-24">' + icon('shield', 14) + ' Member FDIC · Equal Housing Lender</div>' +
+      '</div>' +
+      '<div class="mb-corp-hero-visual">' +
+        '<div class="mb-plastic" style="background:linear-gradient(155deg, #1A2740, #24365A)">' +
+          '<div class="mb-plastic-top"><div class="mb-plastic-chip"></div><div style="font-size:13px;font-weight:700">Visa</div></div>' +
+          '<div><div class="mb-plastic-num">•••• •••• •••• 4821</div>' +
+          '<div class="mb-plastic-bottom mb-mt-8"><div><div style="opacity:.7;font-size:9px">CARD HOLDER</div><div>A. Mensah</div></div>' +
+          '<div><div style="opacity:.7;font-size:9px">EXPIRES</div><div class="num">09/29</div></div></div></div>' +
+        '</div>' +
+      '</div>' +
+    '</div></section>' +
+    '<section class="mb-quicklinks-strip"><div class="mb-corp-inner mb-quicklinks-grid">' +
+      [['landmark','Open an account'],['send','Pay bills'],['search','Find a branch or ATM'],['help','Customer service']]
+        .map(q => '<button type="button" class="mb-quicklink" onclick="goSignIn()">' + icon(q[0], 17) + ' ' + q[1] + '</button>').join('') +
+    '</div></section>' +
+    '<section class="mb-corp-inner mb-home-section">' +
+      '<div class="mb-section-head"><h2 style="font-size:22px">Banking built around you</h2></div><div class="mb-ledger-rule"></div>' +
+      '<div class="mb-feature-grid">' + products.map(f =>
+        '<div class="mb-feature-card"><div class="mb-quick-icon">' + icon(f[0], 18) + '</div>' +
+        '<div style="font-weight:600;font-size:14.5px;margin-top:12px">' + f[1] + '</div>' +
+        '<div class="mb-muted" style="font-size:12.5px;margin-top:6px;line-height:1.6">' + f[2] + '</div>' +
+        '<button type="button" class="mb-link mb-mt-16" style="padding:0" onclick="goSignIn()">' + f[3] + ' ' + icon('chevronRight', 13) + '</button></div>'
+      ).join('') + '</div>' +
+    '</section>' +
+    '<section class="mb-rate-banner"><div class="mb-corp-inner mb-rate-banner-inner">' +
+      '<div><div class="mb-eyebrow" style="color:#14100a">Savings rate</div>' +
+      '<div class="display" style="font-size:34px;font-weight:600;color:#14100a">4.25% APY</div>' +
+      '<div style="font-size:12.5px;color:#3a2e15">On our High-Yield Savings account — no minimum balance.</div></div>' +
+      '<button type="button" class="mb-btn" style="background:#14100a;color:#fff" onclick="goSignIn()">Open savings ' + icon('arrowRight', 14) + '</button>' +
+    '</div></section>' +
+    '<section class="mb-corp-inner mb-home-section"><div class="mb-security-row">' +
+      '<div style="flex:1;min-width:260px"><div class="mb-section-head"><h2 style="font-size:20px">Security is not a feature. It\'s the foundation.</h2></div>' +
+      '<p class="mb-muted" style="font-size:13px;margin-top:8px;line-height:1.7;max-width:480px">Every account is protected by two-factor authentication, real-time fraud monitoring, and instant card freezing.</p>' +
+      '<div class="mb-trust-list mb-mt-16">' + trust.map(t => '<div class="mb-trust-item">' + icon(t[0], 15) + ' ' + t[1] + '</div>').join('') + '</div></div>' +
+      '<div class="mb-app-download"><div style="font-weight:600;font-size:14.5px;margin-bottom:4px">Bank on the go</div>' +
+      '<div class="mb-muted" style="font-size:12.5px;margin-bottom:14px">Get the Meridian app for iOS and Android.</div>' +
+      '<div class="mb-flex mb-gap-12">' +
+        '<button type="button" class="mb-store-btn" onclick="goSignIn()">' + icon('smartphone', 16) + '<div><div style="font-size:8.5px;opacity:.75">Download on the</div><div style="font-size:12.5px;font-weight:600">App Store</div></div></button>' +
+        '<button type="button" class="mb-store-btn" onclick="goSignIn()">' + icon('smartphone', 16) + '<div><div style="font-size:8.5px;opacity:.75">Get it on</div><div style="font-size:12.5px;font-weight:600">Google Play</div></div></button>' +
+      '</div></div>' +
+    '</div></section>' +
+    '<footer class="mb-corp-footer"><div class="mb-corp-inner">' +
+      '<div class="mb-footer-cols">' +
+        '<div><div class="mb-footer-h">Banking</div><div class="mb-muted mb-footer-link">Checking</div><div class="mb-muted mb-footer-link">Savings & CDs</div><div class="mb-muted mb-footer-link">Credit cards</div><div class="mb-muted mb-footer-link">Loans & mortgages</div></div>' +
+        '<div><div class="mb-footer-h">Company</div><div class="mb-muted mb-footer-link">About Meridian</div><div class="mb-muted mb-footer-link">Careers</div><div class="mb-muted mb-footer-link">Newsroom</div><div class="mb-muted mb-footer-link">Investor relations</div></div>' +
+        '<div><div class="mb-footer-h">Support</div><div class="mb-muted mb-footer-link">Help center</div><div class="mb-muted mb-footer-link">Security center</div><div class="mb-muted mb-footer-link">Contact us</div><div class="mb-muted mb-footer-link">Locations & ATMs</div></div>' +
+        '<div><div class="mb-footer-h">Legal</div><div class="mb-muted mb-footer-link">Privacy policy</div><div class="mb-muted mb-footer-link">Terms of use</div><div class="mb-muted mb-footer-link">Accessibility</div><div class="mb-muted mb-footer-link">Deposit agreement</div></div>' +
+      '</div>' +
+      '<div class="mb-footer-fine mb-muted">© 2026 Meridian Bank, N.A. Member FDIC. Equal Housing Lender. Deposits insured up to $250,000 per depositor. This is a demo interface for illustration only — no real accounts are connected.</div>' +
+    '</div></footer>' +
+  '</div>';
 }
 
-function LoginPage({ onLogin, onBack }) {
-  const [email, setEmail] = useState('demo@meridian.bank');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+function goSignIn() { state.authView = 'login'; render(); window.scrollTo(0, 0); }
+function goHome() { state.authView = 'home'; render(); window.scrollTo(0, 0); }
 
-  function submit(e) {
-    e.preventDefault();
-    if (!email || !password) { setError('Enter an email and password to continue.'); return; }
-    setError(''); setLoading(true);
-    setTimeout(() => { setLoading(false); onLogin(); }, 650);
-  }
-
-  return (
-    <div className="mb-login-wrap">
-      <div className="mb-login-card">
-        <button className="mb-btn mb-btn-ghost sm" style={{ marginBottom: 10, marginLeft: -10 }} onClick={onBack} type="button">← Back to home</button>
-        <div className="mb-brand mb-mb-24">
-          <div className="mb-brand-mark">M</div>
-          <div>
-            <div className="mb-brand-name">Meridian</div>
-            <div className="mb-brand-sub">Private Banking</div>
-          </div>
-        </div>
-        <div className="display" style={{ fontSize: 22, fontWeight: 600, marginBottom: 4 }}>Welcome back</div>
-        <div className="mb-muted" style={{ fontSize: 13, marginBottom: 22 }}>Sign in to view your accounts.</div>
-        <form onSubmit={submit}>
-          <div className="mb-field">
-            <label>Email</label>
-            <input className="mb-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@email.com" />
-          </div>
-          <div className="mb-field">
-            <label>Password</label>
-            <input className="mb-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter any password" />
-          </div>
-          {error && <div style={{ color: 'var(--coral)', fontSize: 12.5, marginBottom: 12 }}>{error}</div>}
-          <button className="mb-btn mb-btn-primary block" type="submit" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
-        <div className="mb-login-hint">Demo mode — enter any password to sign in. No real accounts are connected.</div>
-      </div>
-    </div>
-  );
+/* ============================== LOGIN ============================== */
+function renderLoginPage() {
+  return '<div class="mb-login-wrap"><div class="mb-login-card">' +
+    '<button type="button" class="mb-btn mb-btn-ghost sm" style="margin-bottom:10px;margin-left:-10px" onclick="goHome()">← Back to home</button>' +
+    '<div class="mb-brand mb-mb-24"><div class="mb-brand-mark">M</div><div><div class="mb-brand-name">Meridian</div><div class="mb-brand-sub">Private Banking</div></div></div>' +
+    '<div class="display" style="font-size:22px;font-weight:600;margin-bottom:4px">Welcome back</div>' +
+    '<div class="mb-muted" style="font-size:13px;margin-bottom:22px">Sign in to view your accounts.</div>' +
+    '<form onsubmit="return doLogin(event)">' +
+      '<div class="mb-field"><label>Email</label><input class="mb-input" id="login-email" type="email" value="demo@meridian.bank" placeholder="you@email.com"/></div>' +
+      '<div class="mb-field"><label>Password</label><input class="mb-input" id="login-password" type="password" placeholder="Enter any password"/></div>' +
+      '<div id="login-error" style="color:var(--coral);font-size:12.5px;margin-bottom:12px"></div>' +
+      '<button class="mb-btn mb-btn-primary block" type="submit" id="login-btn">Sign in</button>' +
+    '</form>' +
+    '<div class="mb-login-hint">Demo mode — enter any password to sign in. No real accounts are connected.</div>' +
+  '</div></div>';
+}
+function doLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value;
+  const pw = document.getElementById('login-password').value;
+  if (!email || !pw) { document.getElementById('login-error').textContent = 'Enter an email and password to continue.'; return false; }
+  document.getElementById('login-btn').textContent = 'Signing in…';
+  setTimeout(() => { state.loggedIn = true; state.page = 'dashboard'; render(); }, 500);
+  return false;
 }
 
-function Dashboard({ accounts, transactions, hide, setHide, setPage, setModal, name, goals, creditScore }) {
-  const totalBalance = accounts.filter(a => a.type !== 'credit').reduce((s, a) => s + a.balance, 0)
-    + accounts.filter(a => a.type === 'credit').reduce((s, a) => s + a.balance, 0);
-  const animated = useCountUp(totalBalance, 900);
-  const recent = transactions.slice(0, 6);
-
-  const spentByCat = useMemo(() => {
-    const m = {};
-    transactions.forEach(t => { if (t.amount < 0 && BUDGET_LIMITS[t.category]) m[t.category] = (m[t.category] || 0) + Math.abs(t.amount); });
-    return m;
-  }, [transactions]);
-  const topBudgets = Object.entries(BUDGET_LIMITS).map(([cat, limit]) => ({ cat, limit, spent: spentByCat[cat] || 0 }))
-    .sort((a, b) => (b.spent / b.limit) - (a.spent / a.limit)).slice(0, 3);
-
-  return (
-    <div>
-      <div className="mb-hero">
-        <div className="mb-hero-label">
-          <span>Total available balance</span>
-          <button className="mb-eye-btn" onClick={() => setHide(!hide)} type="button">
-            {hide ? <EyeOff size={14} /> : <Eye size={14} />}
-          </button>
-        </div>
-        <div className="mb-hero-amount">
-          <span className="num">{hide ? '••••••••' : ('$' + animated.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}</span>
-          <span className="mb-hero-delta"><TrendingUp size={12} /> 2.4% this month</span>
-        </div>
-        <div className="mb-muted" style={{ fontSize: 12.5 }}>Good to see you, {name.split(' ')[0]}. Here's where things stand today.</div>
-      </div>
-
-      <div className="mb-ledger-rule" />
-
-      <div className="mb-grid-3 mb-mb-24">
-        {accounts.map(a => (
-          <AccountVisualCard key={a.id} acct={a} hide={hide} onClick={() => setPage('accounts')} />
-        ))}
-      </div>
-
-      <div className="mb-quick-actions mb-mb-24">
-        <button className="mb-quick-btn" onClick={() => setPage('transfers')} type="button">
-          <div className="mb-quick-icon"><ArrowLeftRight size={17} /></div>
-          <div><div style={{ fontWeight: 600, fontSize: 13.5 }}>Transfer money</div><div className="mb-muted" style={{ fontSize: 11.5 }}>Between accounts or to someone</div></div>
-        </button>
-        <button className="mb-quick-btn" onClick={() => setPage('billpay')} type="button">
-          <div className="mb-quick-icon"><Receipt size={17} /></div>
-          <div><div style={{ fontWeight: 600, fontSize: 13.5 }}>Pay a bill</div><div className="mb-muted" style={{ fontSize: 11.5 }}>5 payees on file</div></div>
-        </button>
-        <button className="mb-quick-btn" onClick={() => setPage('cards')} type="button">
-          <div className="mb-quick-icon"><Snowflake size={17} /></div>
-          <div><div style={{ fontWeight: 600, fontSize: 13.5 }}>Freeze a card</div><div className="mb-muted" style={{ fontSize: 11.5 }}>Instant, reversible</div></div>
-        </button>
-        <button className="mb-quick-btn" onClick={() => setModal('deposit')} type="button">
-          <div className="mb-quick-icon"><Wallet size={17} /></div>
-          <div><div style={{ fontWeight: 600, fontSize: 13.5 }}>Deposit a check</div><div className="mb-muted" style={{ fontSize: 11.5 }}>Snap a photo to deposit</div></div>
-        </button>
-      </div>
-
-      <div className="mb-grid-2">
-        <div className="mb-card">
-          <div className="mb-section-head"><h2>Cash flow, last 6 months</h2></div>
-          <div className="mb-ledger-rule" />
-          <div style={{ height: 220 }}>
-            <MiniAreaChart data={TREND} />
-          </div>
-          <div className="mb-flex mb-gap-12" style={{ fontSize: 11.5 }}>
-            <span className="mb-flex mb-gap-8"><span className="mb-cat-dot" style={{ background: '#45BE94' }} />Income</span>
-            <span className="mb-flex mb-gap-8"><span className="mb-cat-dot" style={{ background: '#E27467' }} />Spending</span>
-          </div>
-        </div>
-
-        <div className="mb-card">
-          <div className="mb-section-head">
-            <h2>Recent activity</h2>
-            <button className="mb-link" onClick={() => setPage('transactions')} type="button">View all <ChevronRight size={13} /></button>
-          </div>
-          <div className="mb-ledger-rule" />
-          {recent.map(t => (
-            <div className="mb-tx-row" key={t.id}>
-              <div className="mb-tx-icon">{t.amount > 0 ? <ArrowDownLeft size={15} color="var(--teal)" /> : <ArrowUpRight size={15} color="var(--muted)" />}</div>
-              <div className="mb-tx-mid">
-                <div className="mb-tx-merchant">{t.merchant}</div>
-                <div className="mb-tx-meta"><CategoryDot cat={t.category} />{t.category} · {fmtDate(t.date)}</div>
-              </div>
-              <div className="mb-tx-amt num" style={{ color: t.amount > 0 ? 'var(--teal)' : 'var(--text)' }}>
-                {hide ? '••••' : (t.amount > 0 ? '+' : '') + money(t.amount).replace('-', '-')}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="mb-card mb-mt-24">
-        <div className="mb-section-head">
-          <h2>Budget snapshot</h2>
-          <button className="mb-link" onClick={() => setPage('budget')} type="button">Full breakdown <ChevronRight size={13} /></button>
-        </div>
-        <div className="mb-ledger-rule" />
-        <div className="mb-grid-3">
-          {topBudgets.map(b => {
-            const pct = Math.min(100, (b.spent / b.limit) * 100);
-            const color = pct > 100 ? 'var(--coral)' : pct > 70 ? 'var(--brass)' : 'var(--teal)';
-            return (
-              <div key={b.cat}>
-                <div className="mb-flex" style={{ justifyContent: 'space-between', fontSize: 12.5, marginBottom: 6 }}>
-                  <span className="mb-flex mb-gap-8"><CategoryDot cat={b.cat} />{b.cat}</span>
-                  <span className="mb-muted num">{money(b.spent)} / {money(b.limit)}</span>
-                </div>
-                <div className="mb-progress"><div className="mb-progress-fill" style={{ width: pct + '%', background: color }} /></div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="mb-grid-2 mb-mt-24">
-        <div className="mb-card">
-          <div className="mb-section-head"><h2>Savings goals</h2></div>
-          <div className="mb-ledger-rule" />
-          {goals.map(g => {
-            const pct = Math.min(100, (g.saved / g.target) * 100);
-            return (
-              <div className="mb-flex mb-gap-12 mb-mb-16" key={g.id}>
-                <div className="mb-goal-ring" style={{ background: `conic-gradient(${g.color} ${pct * 3.6}deg, var(--surface-2) 0)` }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10.5, fontWeight: 700 }}>{Math.round(pct)}%</div>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div className="mb-flex" style={{ justifyContent: 'space-between', fontSize: 13, fontWeight: 600 }}>
-                    <span>{g.name}</span>
-                  </div>
-                  <div className="mb-muted num" style={{ fontSize: 11.5 }}>{money(g.saved)} of {money(g.target)}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mb-card">
-          <div className="mb-section-head"><h2>Credit score</h2></div>
-          <div className="mb-ledger-rule" />
-          <div className="display" style={{ fontSize: 40, fontWeight: 600 }}>{creditScore}</div>
-          <div className="mb-muted" style={{ fontSize: 12, marginBottom: 16 }}>Very good — updated Aug 1, 2026</div>
-          <div className="mb-gauge-wrap">
-            <div className="mb-gauge-marker" style={{ left: ((creditScore - 300) / (850 - 300) * 100) + '%' }} />
-          </div>
-          <div className="mb-flex mb-muted" style={{ justifyContent: 'space-between', fontSize: 10.5, marginTop: 6 }}>
-            <span>300</span><span>850</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AccountsPage({ accounts, transactions, hide, setPage, setTxFilter }) {
-  return (
-    <div>
-      <div className="mb-section-head mb-mb-16"><h2 style={{ fontSize: 20 }}>Your accounts</h2></div>
-      <div className="mb-ledger-rule" />
-      {accounts.map(a => {
-        const txCount = transactions.filter(t => t.accountId === a.id).length;
-        return (
-          <div className="mb-card mb-mb-16" key={a.id}>
-            <div className="mb-grid-2" style={{ alignItems: 'center' }}>
-              <div>
-                <div className="mb-acct-type mb-muted">{a.type}</div>
-                <div className="display" style={{ fontSize: 19, fontWeight: 600, marginTop: 2 }}>{a.name}</div>
-                <div className="num mb-muted" style={{ fontSize: 13, marginTop: 8 }}>Account •••• {a.number.slice(-4)}</div>
-                {a.apy && <div className="mb-muted" style={{ fontSize: 12, marginTop: 4 }}>Earning {a.apy}% APY</div>}
-                {a.type === 'credit' && <div className="mb-muted" style={{ fontSize: 12, marginTop: 4 }}>Limit {money(a.limit)} · Available {money(a.limit - Math.abs(a.balance))}</div>}
-                <div className="mb-flex mb-gap-8" style={{ marginTop: 14 }}>
-                  <button className="mb-btn mb-btn-secondary sm" onClick={() => setPage('transfers')} type="button"><ArrowLeftRight size={13} /> Transfer</button>
-                  <button className="mb-btn mb-btn-ghost sm" onClick={() => { setTxFilter(a.id); setPage('transactions'); }} type="button">{txCount} transactions <ChevronRight size={13} /></button>
-                </div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div className="mb-muted" style={{ fontSize: 12 }}>{a.type === 'credit' ? 'Current balance owed' : 'Available balance'}</div>
-                <div className="num display" style={{ fontSize: 30, fontWeight: 600, color: a.type === 'credit' ? 'var(--coral)' : 'var(--text)' }}>
-                  {money(a.type === 'credit' ? Math.abs(a.balance) : a.balance, hide)}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function TransactionsPage({ transactions, accounts, initialFilter }) {
-  const [account, setAccount] = useState(initialFilter || 'all');
-  const [category, setCategory] = useState('all');
-  const [search, setSearch] = useState('');
-
-  const filtered = transactions.filter(t =>
-    (account === 'all' || t.accountId === account) &&
-    (category === 'all' || t.category === category) &&
-    (search === '' || t.merchant.toLowerCase().includes(search.toLowerCase()))
-  );
-
-  function exportCSV() {
-    const rows = [['Date', 'Merchant', 'Category', 'Account', 'Amount', 'Status']];
-    filtered.forEach(t => rows.push([t.date, t.merchant, t.category, t.accountId, t.amount, t.status]));
-    const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'meridian-transactions.csv'; a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  const categories = Array.from(new Set(transactions.map(t => t.category)));
-
-  return (
-    <div>
-      <div className="mb-section-head mb-mb-16">
-        <h2 style={{ fontSize: 20 }}>Transactions</h2>
-        <button className="mb-btn mb-btn-secondary sm" onClick={exportCSV} type="button"><Download size={13} /> Export CSV</button>
-      </div>
-      <div className="mb-ledger-rule" />
-      <div className="mb-card mb-mb-16">
-        <div className="mb-row">
-          <div className="mb-field" style={{ marginBottom: 0 }}>
-            <label>Account</label>
-            <select className="mb-select" value={account} onChange={e => setAccount(e.target.value)}>
-              <option value="all">All accounts</option>
-              {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
-          </div>
-          <div className="mb-field" style={{ marginBottom: 0 }}>
-            <label>Category</label>
-            <select className="mb-select" value={category} onChange={e => setCategory(e.target.value)}>
-              <option value="all">All categories</option>
-              {categories.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div className="mb-field" style={{ marginBottom: 0 }}>
-            <label>Search</label>
-            <input className="mb-input" placeholder="Merchant name…" value={search} onChange={e => setSearch(e.target.value)} />
-          </div>
-        </div>
-      </div>
-
-      <div className="mb-card pad-0">
-        <div style={{ overflowX: 'auto', padding: '18px 20px' }}>
-          <table className="mb-table">
-            <thead>
-              <tr><th>Date</th><th>Merchant</th><th>Category</th><th>Account</th><th>Status</th><th className="num">Amount</th></tr>
-            </thead>
-            <tbody>
-              {filtered.map(t => (
-                <tr key={t.id}>
-                  <td className="mb-muted">{fmtDate(t.date)}</td>
-                  <td>{t.merchant}</td>
-                  <td><span className="mb-flex mb-gap-8"><CategoryDot cat={t.category} />{t.category}</span></td>
-                  <td className="mb-muted">{accounts.find(a => a.id === t.accountId)?.name || t.accountId}</td>
-                  <td><span className={'mb-badge ' + (t.status === 'pending' ? 'pending' : 'ok')}>{t.status}</span></td>
-                  <td className="num" style={{ textAlign: 'right', color: t.amount > 0 ? 'var(--teal)' : 'var(--text)' }}>
-                    {(t.amount > 0 ? '+' : '') + money(t.amount)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {filtered.length === 0 && <div className="mb-empty">No transactions match these filters.</div>}
-        </div>
-      </div>
-      <div className="mb-muted" style={{ fontSize: 12, marginTop: 10 }}>{filtered.length} transactions</div>
-    </div>
-  );
-}
-
-function TransfersPage({ accounts, doTransfer, doP2P }) {
-  const [mode, setMode] = useState('internal');
-  const [from, setFrom] = useState(accounts[0].id);
-  const [to, setTo] = useState(accounts[1].id);
-  const [amount, setAmount] = useState('');
-  const [memo, setMemo] = useState('');
-  const [recipient, setRecipient] = useState('');
-  const [recipientContact, setRecipientContact] = useState('');
-  const [step, setStep] = useState('form');
-  const [error, setError] = useState('');
-
-  const fromAcct = accounts.find(a => a.id === from);
-  const availableToAccounts = accounts.filter(a => a.id !== from && a.type !== 'credit');
-
-  function review(e) {
-    e.preventDefault();
-    const amt = parseFloat(amount);
-    if (!amt || amt <= 0) { setError('Enter an amount greater than $0.'); return; }
-    if (mode === 'internal' && from === to) { setError('Choose two different accounts.'); return; }
-    if (amt > fromAcct.balance) { setError('That exceeds the available balance on this account.'); return; }
-    if (mode === 'p2p' && !recipient) { setError('Enter a recipient name.'); return; }
-    setError('');
-    setStep('review');
-  }
-
-  function confirm() {
-    const amt = parseFloat(amount);
-    if (mode === 'internal') doTransfer(from, to, amt, memo);
-    else doP2P(from, recipient, amt, memo);
-    setStep('success');
-  }
-
-  function reset() {
-    setAmount(''); setMemo(''); setRecipient(''); setRecipientContact(''); setStep('form'); setError('');
-  }
-
-  return (
-    <div>
-      <div className="mb-section-head mb-mb-16"><h2 style={{ fontSize: 20 }}>Transfers</h2></div>
-      <div className="mb-ledger-rule" />
-
-      <div className="mb-card" style={{ maxWidth: 480 }}>
-        {step === 'form' && (
-          <>
-            <div className="mb-tabs mb-mb-24">
-              <button className={'mb-tab' + (mode === 'internal' ? ' active' : '')} onClick={() => { setMode('internal'); setError(''); }} type="button">Between my accounts</button>
-              <button className={'mb-tab' + (mode === 'p2p' ? ' active' : '')} onClick={() => { setMode('p2p'); setError(''); }} type="button">Send to someone</button>
-            </div>
-            <form onSubmit={review}>
-              <div className="mb-field">
-                <label>From</label>
-                <select className="mb-select" value={from} onChange={e => setFrom(e.target.value)}>
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name} — {money(a.balance)}</option>)}
-                </select>
-              </div>
-              {mode === 'internal' ? (
-                <div className="mb-field">
-                  <label>To</label>
-                  <select className="mb-select" value={to} onChange={e => setTo(e.target.value)}>
-                    {availableToAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                  </select>
-                </div>
-              ) : (
-                <>
-                  <div className="mb-field">
-                    <label>Recipient name</label>
-                    <input className="mb-input" placeholder="e.g. Kojo Boateng" value={recipient} onChange={e => setRecipient(e.target.value)} />
-                  </div>
-                  <div className="mb-field">
-                    <label>Email or phone</label>
-                    <input className="mb-input" placeholder="email@example.com" value={recipientContact} onChange={e => setRecipientContact(e.target.value)} />
-                  </div>
-                </>
-              )}
-              <div className="mb-field">
-                <label>Amount</label>
-                <input className="mb-input num" type="number" step="0.01" min="0" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} />
-              </div>
-              <div className="mb-field">
-                <label>Memo (optional)</label>
-                <input className="mb-input" placeholder="What's this for?" value={memo} onChange={e => setMemo(e.target.value)} />
-              </div>
-              {error && <div style={{ color: 'var(--coral)', fontSize: 12.5, marginBottom: 12 }}>{error}</div>}
-              <button className="mb-btn mb-btn-primary block" type="submit">Review transfer</button>
-            </form>
-          </>
-        )}
-
-        {step === 'review' && (
-          <div>
-            <div className="mb-muted" style={{ fontSize: 12.5, marginBottom: 14 }}>Review and confirm</div>
-            <div className="mb-flex" style={{ justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--hairline)' }}>
-              <span className="mb-muted">From</span><span>{fromAcct.name}</span>
-            </div>
-            <div className="mb-flex" style={{ justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--hairline)' }}>
-              <span className="mb-muted">To</span><span>{mode === 'internal' ? accounts.find(a => a.id === to).name : recipient}</span>
-            </div>
-            {memo && <div className="mb-flex" style={{ justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--hairline)' }}>
-              <span className="mb-muted">Memo</span><span>{memo}</span>
-            </div>}
-            <div className="mb-flex" style={{ justifyContent: 'space-between', padding: '10px 0' }}>
-              <span className="mb-muted">Amount</span><span className="num display" style={{ fontSize: 20, fontWeight: 600 }}>{money(parseFloat(amount))}</span>
-            </div>
-            <div className="mb-flex mb-gap-12 mb-mt-16">
-              <button className="mb-btn mb-btn-secondary block" onClick={() => setStep('form')} type="button">Back</button>
-              <button className="mb-btn mb-btn-primary block" onClick={confirm} type="button">Confirm & send</button>
-            </div>
-          </div>
-        )}
-
-        {step === 'success' && (
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'color-mix(in srgb, var(--teal) 18%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <Check size={26} color="var(--teal)" />
-            </div>
-            <div className="display" style={{ fontSize: 19, fontWeight: 600 }}>Transfer complete</div>
-            <div className="mb-muted" style={{ fontSize: 13, margin: '6px 0 20px' }}>{money(parseFloat(amount))} sent successfully.</div>
-            <button className="mb-btn mb-btn-secondary block" onClick={reset} type="button">Make another transfer</button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CardsPage({ cards, accounts, toggleFreeze, setModal }) {
-  const [revealCvv, setRevealCvv] = useState({});
-  return (
-    <div>
-      <div className="mb-section-head mb-mb-16"><h2 style={{ fontSize: 20 }}>Your cards</h2></div>
-      <div className="mb-ledger-rule" />
-      <div className="mb-grid-2">
-        {cards.map(c => {
-          const acct = accounts.find(a => a.id === c.accountId);
-          return (
-            <div key={c.id}>
-              <div className="mb-plastic" style={{ background: c.dark ? 'linear-gradient(155deg, #171313, #2b2015)' : 'linear-gradient(155deg, #1A2740, #24365A)', position: 'relative' }}>
-                {c.frozen && <div className="mb-plastic" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', borderRadius: 18 }} />}
-                <div className="mb-plastic-top">
-                  <div className="mb-plastic-chip" />
-                  <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.03em' }}>{c.network}</div>
-                </div>
-                <div>
-                  <div className="mb-plastic-num">•••• •••• •••• {c.last4}</div>
-                  <div className="mb-plastic-bottom mb-mt-8">
-                    <div>
-                      <div style={{ opacity: .7, fontSize: 9 }}>CARD HOLDER</div>
-                      <div>{c.holder}</div>
-                    </div>
-                    <div>
-                      <div style={{ opacity: .7, fontSize: 9 }}>EXPIRES</div>
-                      <div className="num">{c.expiry}</div>
-                    </div>
-                  </div>
-                </div>
-                {c.frozen && (
-                  <div className="mb-plastic-frozen-badge" style={{ zIndex: 2 }}>
-                    <Snowflake size={16} /> Card frozen
-                  </div>
-                )}
-              </div>
-              <div className="mb-card mb-mt-16">
-                <div className="mb-flex" style={{ justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 13.5 }}>{c.type === 'debit' ? 'Debit card' : 'Credit card'}</div>
-                    <div className="mb-muted" style={{ fontSize: 12 }}>Linked to {acct?.name}</div>
-                  </div>
-                  <div className="mb-flex mb-gap-8">
-                    <span className="mb-muted" style={{ fontSize: 12 }}>{c.frozen ? 'Frozen' : 'Active'}</span>
-                    <Switch on={!c.frozen} onClick={() => toggleFreeze(c.id)} />
-                  </div>
-                </div>
-                <div className="mb-flex mb-gap-8 mb-mt-16">
-                  <button className="mb-btn mb-btn-secondary sm" onClick={() => setRevealCvv(r => ({ ...r, [c.id]: !r[c.id] }))} type="button">
-                    {revealCvv[c.id] ? 'Hide CVV · 482' : 'Show CVV'}
-                  </button>
-                  <button className="mb-btn mb-btn-ghost sm" onClick={() => setModal({ type: 'lost', card: c })} type="button">Report lost or stolen</button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function BillPayPage({ payees, accounts, toggleAutopay, payNow, addPayee }) {
-  const [payModal, setPayModal] = useState(null);
-  const [addOpen, setAddOpen] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newCat, setNewCat] = useState('Utilities');
-  const [payAmount, setPayAmount] = useState('');
-  const [payFrom, setPayFrom] = useState(accounts[0].id);
-
-  function openPay(p) { setPayModal(p); setPayAmount(String(p.avgAmount)); }
-  function confirmPay() {
-    payNow(payModal.id, payFrom, parseFloat(payAmount));
-    setPayModal(null);
-  }
-  function submitAdd(e) {
-    e.preventDefault();
-    if (!newName) return;
-    addPayee(newName, newCat);
-    setNewName(''); setAddOpen(false);
-  }
-
-  return (
-    <div>
-      <div className="mb-section-head mb-mb-16">
-        <h2 style={{ fontSize: 20 }}>Bill pay</h2>
-        <button className="mb-btn mb-btn-secondary sm" onClick={() => setAddOpen(true)} type="button"><Plus size={13} /> Add a payee</button>
-      </div>
-      <div className="mb-ledger-rule" />
-
-      <div className="mb-card pad-0">
-        {payees.map((p, i) => (
-          <div key={p.id} style={{ padding: '16px 20px', borderBottom: i < payees.length - 1 ? '1px solid var(--hairline)' : 'none' }}>
-            <div className="mb-flex" style={{ justifyContent: 'space-between' }}>
-              <div className="mb-flex mb-gap-12">
-                <div className="mb-tx-icon"><Receipt size={16} color="var(--brass-bright)" /></div>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: 13.5 }}>{p.name}</div>
-                  <div className="mb-tx-meta"><CategoryDot cat={p.category} />{p.category} · Due {fmtDate(p.nextDue)} · ~{money(p.avgAmount)}</div>
-                </div>
-              </div>
-              <div className="mb-flex mb-gap-12">
-                <div className="mb-flex mb-gap-8 mb-muted" style={{ fontSize: 11.5 }}>
-                  <span>Autopay</span><Switch on={p.autopay} onClick={() => toggleAutopay(p.id)} />
-                </div>
-                <button className="mb-btn mb-btn-primary sm" onClick={() => openPay(p)} type="button">Pay now</button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {payModal && (
-        <Modal title={'Pay ' + payModal.name} onClose={() => setPayModal(null)}>
-          <div className="mb-field">
-            <label>From account</label>
-            <select className="mb-select" value={payFrom} onChange={e => setPayFrom(e.target.value)}>
-              {accounts.filter(a => a.type !== 'credit').map(a => <option key={a.id} value={a.id}>{a.name} — {money(a.balance)}</option>)}
-            </select>
-          </div>
-          <div className="mb-field">
-            <label>Amount</label>
-            <input className="mb-input num" type="number" step="0.01" value={payAmount} onChange={e => setPayAmount(e.target.value)} />
-          </div>
-          <button className="mb-btn mb-btn-primary block" onClick={confirmPay} type="button">Confirm payment</button>
-        </Modal>
-      )}
-
-      {addOpen && (
-        <Modal title="Add a payee" onClose={() => setAddOpen(false)}>
-          <form onSubmit={submitAdd}>
-            <div className="mb-field">
-              <label>Payee name</label>
-              <input className="mb-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. State Farm Insurance" />
-            </div>
-            <div className="mb-field">
-              <label>Category</label>
-              <select className="mb-select" value={newCat} onChange={e => setNewCat(e.target.value)}>
-                {Object.keys(CATEGORY_COLORS).map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <button className="mb-btn mb-btn-primary block" type="submit">Add payee</button>
-          </form>
-        </Modal>
-      )}
-    </div>
-  );
-}
-
-function BudgetPage({ transactions }) {
-  const spentByCat = useMemo(() => {
-    const m = {};
-    transactions.forEach(t => { if (t.amount < 0) m[t.category] = (m[t.category] || 0) + Math.abs(t.amount); });
-    return m;
-  }, [transactions]);
-
-  const pieData = Object.entries(spentByCat).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-  const budgets = Object.entries(BUDGET_LIMITS).map(([cat, limit]) => ({ cat, limit, spent: spentByCat[cat] || 0 }));
-  const overBudget = budgets.find(b => b.spent > b.limit);
-
-  return (
-    <div>
-      <div className="mb-section-head mb-mb-16"><h2 style={{ fontSize: 20 }}>Budget & analytics</h2></div>
-      <div className="mb-ledger-rule" />
-
-      <div className="mb-grid-2 mb-mb-24">
-        <div className="mb-card">
-          <div className="mb-section-head"><h2>Where it's going</h2></div>
-          <div className="mb-ledger-rule" />
-          <div style={{ height: 240 }}>
-            <MiniDonut data={pieData} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 11.5 }}>
-            {pieData.map(p => (
-              <span key={p.name} className="mb-flex mb-gap-8"><CategoryDot cat={p.name} />{p.name}<span className="mb-muted num" style={{ marginLeft: 'auto' }}>{money(p.value)}</span></span>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-card">
-          <div className="mb-section-head"><h2>Income vs. spending</h2></div>
-          <div className="mb-ledger-rule" />
-          <div style={{ height: 240 }}>
-            <MiniBarChart data={TREND} />
-          </div>
-        </div>
-      </div>
-
-      {overBudget && (
-        <div className="mb-card mb-mb-24" style={{ borderColor: 'color-mix(in srgb, var(--coral) 40%, transparent)' }}>
-          <div className="mb-flex mb-gap-12">
-            <AlertTriangle size={18} color="var(--coral)" />
-            <div style={{ fontSize: 13 }}>You're {money(overBudget.spent - overBudget.limit)} over your {overBudget.cat} budget this cycle.</div>
-          </div>
-        </div>
-      )}
-
-      <div className="mb-card">
-        <div className="mb-section-head"><h2>Budgets this cycle</h2></div>
-        <div className="mb-ledger-rule" />
-        {budgets.map(b => {
-          const pct = Math.min(100, (b.spent / b.limit) * 100);
-          const color = b.spent > b.limit ? 'var(--coral)' : pct > 70 ? 'var(--brass)' : 'var(--teal)';
-          return (
-            <div key={b.cat} className="mb-mb-16">
-              <div className="mb-flex" style={{ justifyContent: 'space-between', fontSize: 12.5, marginBottom: 6 }}>
-                <span className="mb-flex mb-gap-8"><CategoryDot cat={b.cat} />{b.cat}</span>
-                <span className="mb-muted num">{money(b.spent)} of {money(b.limit)}</span>
-              </div>
-              <div className="mb-progress"><div className="mb-progress-fill" style={{ width: pct + '%', background: color }} /></div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function StatementsPage() {
-  function download(doc) {
-    const content = 'Meridian Bank\n' + doc.label + '\nAccount: ' + doc.account + '\nIssued: ' + doc.date + '\n\nThis is a simulated document for demo purposes.';
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = doc.label.replace(/\s+/g, '-') + '.txt'; a.click();
-    URL.revokeObjectURL(url);
-  }
-  return (
-    <div>
-      <div className="mb-section-head mb-mb-16"><h2 style={{ fontSize: 20 }}>Statements & documents</h2></div>
-      <div className="mb-ledger-rule" />
-      <div className="mb-card pad-0">
-        {STATEMENTS.map(doc => (
-          <div className="mb-doc-row" key={doc.id}>
-            <div className="mb-tx-icon"><FileText size={16} color="var(--brass-bright)" /></div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: 13.5 }}>{doc.label}</div>
-              <div className="mb-muted" style={{ fontSize: 11.5 }}>{doc.account} · Issued {fmtDate(doc.date)}</div>
-            </div>
-            <button className="mb-btn mb-btn-secondary sm" onClick={() => download(doc)} type="button"><Download size={13} /> Download</button>
-          </div>
-        ))}
-      </div>
-      <div className="mb-muted" style={{ fontSize: 12, marginTop: 12 }}>Statements are generated monthly and kept on file for 7 years, as required for account records.</div>
-    </div>
-  );
-}
-
-function SupportPage({ addToast }) {
-  const [openFaq, setOpenFaq] = useState(0);
-  const [message, setMessage] = useState('');
-
-  function send(e) {
-    e.preventDefault();
-    if (!message.trim()) return;
-    setMessage('');
-    addToast('Message sent — our team replies within 1 business day.');
-  }
-
-  return (
-    <div>
-      <div className="mb-section-head mb-mb-16"><h2 style={{ fontSize: 20 }}>Support</h2></div>
-      <div className="mb-ledger-rule" />
-      <div className="mb-grid-2">
-        <div className="mb-card">
-          <div className="mb-section-head"><h2>Frequently asked</h2></div>
-          <div className="mb-ledger-rule" />
-          {FAQS.map((f, i) => (
-            <div className="mb-faq-item" key={i}>
-              <button className="mb-faq-q" onClick={() => setOpenFaq(openFaq === i ? -1 : i)} type="button">
-                {f.q} {openFaq === i ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-              </button>
-              {openFaq === i && <div className="mb-faq-a">{f.a}</div>}
-            </div>
-          ))}
-        </div>
-        <div>
-          <div className="mb-card mb-mb-16">
-            <div className="mb-section-head"><h2>Message us</h2></div>
-            <div className="mb-ledger-rule" />
-            <div className="mb-muted" style={{ fontSize: 12.5, marginBottom: 12 }}>Secure messages are encrypted and tied to your account — no need to share sensitive details over email.</div>
-            <form onSubmit={send}>
-              <div className="mb-field">
-                <textarea className="mb-input" rows={4} placeholder="How can we help?" value={message} onChange={e => setMessage(e.target.value)} style={{ resize: 'vertical', fontFamily: 'inherit' }} />
-              </div>
-              <button className="mb-btn mb-btn-primary block" type="submit"><MessageSquare size={14} /> Send secure message</button>
-            </form>
-          </div>
-          <div className="mb-card">
-            <div className="mb-section-head"><h2>Other ways to reach us</h2></div>
-            <div className="mb-ledger-rule" />
-            <div className="mb-muted" style={{ fontSize: 12.5, lineHeight: 1.8 }}>
-              Call 1-800-555-0182, 24/7<br />
-              Live chat — available in the mobile app<br />
-              Branch & ATM locator — find one near you
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SettingsPage({ profile, setProfile, theme, setTheme, addToast }) {
-  const [form, setForm] = useState(profile);
-  const [twoFA, setTwoFA] = useState(true);
-  const [alerts, setAlerts] = useState({ tx: true, lowBalance: true, marketing: false });
-
-  function save(e) {
-    e.preventDefault();
-    setProfile(form);
-    addToast('Profile updated.');
-  }
-
-  return (
-    <div>
-      <div className="mb-section-head mb-mb-16"><h2 style={{ fontSize: 20 }}>Settings</h2></div>
-      <div className="mb-ledger-rule" />
-
-      <div className="mb-grid-2">
-        <div>
-          <div className="mb-card mb-mb-16">
-            <div className="mb-section-head"><h2>Profile</h2></div>
-            <div className="mb-ledger-rule" />
-            <form onSubmit={save}>
-              <div className="mb-field"><label>Full name</label><input className="mb-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-              <div className="mb-field"><label>Email</label><input className="mb-input" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
-              <div className="mb-field"><label>Phone</label><input className="mb-input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-              <button className="mb-btn mb-btn-primary" type="submit">Save changes</button>
-            </form>
-          </div>
-
-          <div className="mb-card">
-            <div className="mb-section-head"><h2>Notifications</h2></div>
-            <div className="mb-ledger-rule" />
-            {[['tx', 'Transaction alerts'], ['lowBalance', 'Low balance alerts'], ['marketing', 'Product news & offers']].map(([key, label]) => (
-              <div key={key} className="mb-flex" style={{ justifyContent: 'space-between', padding: '9px 0' }}>
-                <span style={{ fontSize: 13 }}>{label}</span>
-                <Switch on={alerts[key]} onClick={() => setAlerts(a => ({ ...a, [key]: !a[key] }))} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-card mb-mb-16">
-            <div className="mb-section-head"><h2>Security</h2></div>
-            <div className="mb-ledger-rule" />
-            <div className="mb-flex" style={{ justifyContent: 'space-between', padding: '9px 0' }}>
-              <span className="mb-flex mb-gap-8" style={{ fontSize: 13 }}><Shield size={14} /> Two-factor authentication</span>
-              <Switch on={twoFA} onClick={() => setTwoFA(!twoFA)} />
-            </div>
-            <div className="mb-flex" style={{ justifyContent: 'space-between', padding: '9px 0' }}>
-              <span className="mb-flex mb-gap-8" style={{ fontSize: 13 }}><Mail size={14} /> Sign-in email alerts</span>
-              <Switch on={true} onClick={() => {}} />
-            </div>
-            <button className="mb-btn mb-btn-secondary block mb-mt-16" type="button" onClick={() => addToast('Password change link sent to your email.')}>Change password</button>
-
-            <div className="mb-mt-24">
-              <div className="mb-muted" style={{ fontSize: 11.5, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>Active sessions</div>
-              {[{ d: 'This device · Chrome', t: 'Active now', tag: true }, { d: 'iPhone 15 · Meridian App', t: '2 days ago', tag: false }].map((s, i) => (
-                <div key={i} className="mb-flex" style={{ justifyContent: 'space-between', padding: '8px 0', fontSize: 12.5 }}>
-                  <span className="mb-flex mb-gap-8"><Smartphone size={13} className="mb-muted" />{s.d}{s.tag && <span className="mb-badge ok">this device</span>}</span>
-                  <span className="mb-muted">{s.t}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-card">
-            <div className="mb-section-head"><h2>Appearance</h2></div>
-            <div className="mb-ledger-rule" />
-            <div className="mb-flex" style={{ justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 13 }}>Dark mode</span>
-              <Switch on={theme === 'dark'} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ============================== APP ============================== */
-function MeridianBank() {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [authView, setAuthView] = useState('home');
-  const [page, setPage] = useState('dashboard');
-  const [theme, setTheme] = useState('dark');
-  const [hide, setHide] = useState(false);
-  const [accounts, setAccounts] = useState(INITIAL_ACCOUNTS);
-  const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS);
-  const [cards, setCards] = useState(INITIAL_CARDS);
-  const [payees, setPayees] = useState(INITIAL_PAYEES);
-  const [goals] = useState(INITIAL_GOALS);
-  const [creditScore] = useState(742);
-  const [profile, setProfile] = useState({ name: 'Ama Mensah', email: 'ama.mensah@email.com', phone: '(555) 019-2231' });
-  const [toasts, setToasts] = useState([]);
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [avatarOpen, setAvatarOpen] = useState(false);
-  const [modal, setModal] = useState(null);
-  const [txFilter, setTxFilter] = useState('all');
-  const [mobilePage, setMobilePage] = useState('dashboard');
-
-  function addToast(message, type = 'success') {
-    const id = uid();
-    setToasts(t => [...t, { id, message, type }]);
-    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3500);
-  }
-
-  function updateBalance(accountId, delta) {
-    setAccounts(prev => prev.map(a => a.id === accountId ? { ...a, balance: a.balance + delta } : a));
-  }
-
-  function doTransfer(fromId, toId, amount, memo) {
-    updateBalance(fromId, -amount);
-    updateBalance(toId, amount);
-    const fromName = accounts.find(a => a.id === fromId)?.name;
-    const toName = accounts.find(a => a.id === toId)?.name;
-    const today = new Date().toISOString().slice(0, 10);
-    setTransactions(prev => [
-      { id: uid(), date: today, merchant: 'Transfer to ' + toName, category: 'Transfer', accountId: fromId, amount: -amount, status: 'posted' },
-      { id: uid(), date: today, merchant: 'Transfer from ' + fromName, category: 'Transfer', accountId: toId, amount: amount, status: 'posted' },
-      ...prev,
-    ]);
-    addToast('Transferred ' + money(amount) + ' to ' + toName + '.');
-  }
-
-  function doP2P(fromId, recipient, amount, memo) {
-    updateBalance(fromId, -amount);
-    const today = new Date().toISOString().slice(0, 10);
-    setTransactions(prev => [{ id: uid(), date: today, merchant: 'Sent to ' + recipient, category: 'Transfer', accountId: fromId, amount: -amount, status: 'posted' }, ...prev]);
-    addToast('Sent ' + money(amount) + ' to ' + recipient + '.');
-  }
-
-  function toggleFreeze(cardId) {
-    setCards(prev => prev.map(c => c.id === cardId ? { ...c, frozen: !c.frozen } : c));
-    const card = cards.find(c => c.id === cardId);
-    addToast(card && !card.frozen ? 'Card frozen.' : 'Card unfrozen.');
-  }
-
-  function toggleAutopay(payeeId) {
-    setPayees(prev => prev.map(p => p.id === payeeId ? { ...p, autopay: !p.autopay } : p));
-  }
-
-  function payNow(payeeId, fromAccountId, amount) {
-    const payee = payees.find(p => p.id === payeeId);
-    if (!payee || !amount || amount <= 0) return;
-    updateBalance(fromAccountId, -amount);
-    const today = new Date().toISOString().slice(0, 10);
-    setTransactions(prev => [{ id: uid(), date: today, merchant: payee.name, category: payee.category, accountId: fromAccountId, amount: -amount, status: 'posted' }, ...prev]);
-    addToast('Paid ' + money(amount) + ' to ' + payee.name + '.');
-  }
-
-  function addPayee(name, category) {
-    setPayees(prev => [...prev, { id: uid(), name, category, avgAmount: 0, nextDue: new Date().toISOString().slice(0, 10), autopay: false }]);
-    addToast('Payee added.');
-  }
-
-  function goPage(p) { setPage(p); setMobilePage(p); setAvatarOpen(false); setNotifOpen(false); }
-
-  if (!loggedIn) {
-    return (
-      <div className="mb-app" data-theme={theme}>
-        <style>{STYLES}</style>
-        {authView === 'home'
-          ? <HomePage onSignIn={() => setAuthView('login')} />
-          : <LoginPage onLogin={() => setLoggedIn(true)} onBack={() => setAuthView('home')} />}
-      </div>
-    );
-  }
-
-  const pageTitles = {
+/* ============================== SHELL ============================== */
+function renderShell() {
+  const titles = {
     dashboard: ['Dashboard', 'Your full financial picture, at a glance'],
     accounts: ['Accounts', 'Balances, numbers, and account details'],
     transactions: ['Transactions', 'Search and review your activity'],
@@ -1812,135 +780,589 @@ function MeridianBank() {
     support: ['Support', 'Help center and secure messaging'],
     settings: ['Settings', 'Profile, security, and preferences'],
   };
+  const t = titles[state.page];
+  return '<div class="mb-shell">' +
+    '<aside class="mb-sidebar">' +
+      '<div class="mb-brand"><div class="mb-brand-mark">M</div><div><div class="mb-brand-name">Meridian</div><div class="mb-brand-sub">Private Banking</div></div></div>' +
+      '<nav class="mb-nav">' + NAV_ITEMS.map(item =>
+        '<button type="button" class="mb-nav-item' + (state.page === item.id ? ' active' : '') + '" onclick="goPage(\'' + item.id + '\')">' + icon(item.icon, 17) + ' ' + item.label + '</button>'
+      ).join('') + '</nav>' +
+      '<div class="mb-sidebar-foot">' +
+        '<div class="mb-theme-toggle"><span>' + (state.theme === 'dark' ? 'Dark mode' : 'Light mode') + '</span>' + switchHtml(state.theme === 'dark', 'toggleTheme()') + '</div>' +
+        '<button type="button" class="mb-logout" onclick="signOut()">' + icon('logout', 15) + ' Sign out</button>' +
+      '</div>' +
+    '</aside>' +
+    '<main class="mb-main">' +
+      '<div class="mb-topbar">' +
+        '<div><div class="mb-topbar-title">' + t[0] + '</div><div class="mb-topbar-sub">' + t[1] + '</div></div>' +
+        '<div class="mb-topbar-right">' +
+          '<div style="position:relative">' +
+            '<button type="button" class="mb-icon-btn" onclick="toggleNotif()">' + icon('bell', 16) + '<span class="mb-dot-badge"></span></button>' +
+            (state.notifOpen ? renderNotifDropdown() : '') +
+          '</div>' +
+          '<div style="position:relative">' +
+            '<button type="button" class="mb-avatar" onclick="toggleAvatar()">' + state.profile.name.split(' ').map(n => n[0]).join('') + '</button>' +
+            (state.avatarOpen ? renderAvatarDropdown() : '') +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="mb-content">' + renderPage() + '</div>' +
+    '</main>' +
+  '</div>';
+}
+function renderNotifDropdown() {
+  return '<div class="mb-card" style="position:absolute;right:0;top:46px;width:320px;z-index:30;padding:10px">' +
+    '<div style="font-weight:600;font-size:13px;padding:4px 6px 10px">Notifications</div>' +
+    NOTIFICATIONS.map(n => '<div class="mb-flex mb-gap-12" style="align-items:flex-start;padding:9px 6px;border-top:1px solid var(--hairline)">' +
+      icon(n.icon, 15, 'style="color:var(--brass-bright);margin-top:2px"') +
+      '<div><div style="font-size:12.5px;font-weight:600">' + n.title + '</div><div class="mb-muted" style="font-size:11.5px;margin-top:1px">' + n.body + '</div><div class="mb-muted" style="font-size:10.5px;margin-top:3px">' + n.time + '</div></div></div>'
+    ).join('') + '</div>';
+}
+function renderAvatarDropdown() {
+  return '<div class="mb-card" style="position:absolute;right:0;top:46px;width:200px;z-index:30;padding:8px">' +
+    '<div style="padding:8px 10px"><div style="font-weight:600;font-size:13px">' + state.profile.name + '</div><div class="mb-muted" style="font-size:11.5px">' + state.profile.email + '</div></div>' +
+    '<button type="button" class="mb-nav-item" onclick="goPage(\'settings\')">' + icon('user', 15) + ' Profile & settings</button>' +
+    '<button type="button" class="mb-nav-item" onclick="signOut()">' + icon('logout', 15) + ' Sign out</button>' +
+  '</div>';
+}
+function goPage(p) { state.page = p; state.notifOpen = false; state.avatarOpen = false; render(); document.querySelector('.mb-content') && document.querySelector('.mb-content').scrollIntoView(); }
+function toggleTheme() { state.theme = state.theme === 'dark' ? 'light' : 'dark'; render(); }
+function toggleNotif() { state.notifOpen = !state.notifOpen; state.avatarOpen = false; render(); }
+function toggleAvatar() { state.avatarOpen = !state.avatarOpen; state.notifOpen = false; render(); }
+function toggleHide() { state.hide = !state.hide; render(); }
+function signOut() { state.loggedIn = false; state.authView = 'home'; render(); }
 
-  return (
-    <div className="mb-app" data-theme={theme}>
-      <style>{STYLES}</style>
-      <div className="mb-shell">
-        <aside className="mb-sidebar">
-          <div className="mb-brand">
-            <div className="mb-brand-mark">M</div>
-            <div>
-              <div className="mb-brand-name">Meridian</div>
-              <div className="mb-brand-sub">Private Banking</div>
-            </div>
-          </div>
-          <nav className="mb-nav">
-            {NAV_ITEMS.map(item => {
-              const Icon = item.icon;
-              return (
-                <button key={item.id} className={'mb-nav-item' + (page === item.id ? ' active' : '')} onClick={() => goPage(item.id)} type="button">
-                  <Icon size={17} /> {item.label}
-                </button>
-              );
-            })}
-          </nav>
-          <div className="mb-sidebar-foot">
-            <div className="mb-theme-toggle">
-              <span>{theme === 'dark' ? 'Dark mode' : 'Light mode'}</span>
-              <Switch on={theme === 'dark'} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} />
-            </div>
-            <button className="mb-logout" onClick={() => { setLoggedIn(false); setAuthView('home'); }} type="button"><LogOut size={15} /> Sign out</button>
-          </div>
-        </aside>
+function renderPage() {
+  switch (state.page) {
+    case 'dashboard': return renderDashboard();
+    case 'accounts': return renderAccounts();
+    case 'transactions': return renderTransactions();
+    case 'transfers': return renderTransfers();
+    case 'cards': return renderCards();
+    case 'billpay': return renderBillPay();
+    case 'budget': return renderBudget();
+    case 'statements': return renderStatements();
+    case 'support': return renderSupport();
+    case 'settings': return renderSettings();
+    default: return '';
+  }
+}
+/* ============================== DASHBOARD ============================== */
+function renderDashboard() {
+  const totalBalance = accounts.reduce((s, a) => s + a.balance, 0);
+  const recent = transactions.slice(0, 6);
+  const spentByCat = {};
+  transactions.forEach(t => { if (t.amount < 0 && BUDGET_LIMITS[t.category]) spentByCat[t.category] = (spentByCat[t.category] || 0) + Math.abs(t.amount); });
+  const topBudgets = Object.keys(BUDGET_LIMITS).map(cat => ({ cat: cat, limit: BUDGET_LIMITS[cat], spent: spentByCat[cat] || 0 }))
+    .sort((a, b) => (b.spent / b.limit) - (a.spent / a.limit)).slice(0, 3);
 
-        <main className="mb-main">
-          <div className="mb-topbar">
-            <div>
-              <div className="mb-topbar-title">{pageTitles[page][0]}</div>
-              <div className="mb-topbar-sub">{pageTitles[page][1]}</div>
-            </div>
-            <div className="mb-topbar-right">
-              <div style={{ position: 'relative' }}>
-                <button className="mb-icon-btn" onClick={() => { setNotifOpen(!notifOpen); setAvatarOpen(false); }} type="button">
-                  <Bell size={16} />
-                  <span className="mb-dot-badge" />
-                </button>
-                {notifOpen && (
-                  <div className="mb-card" style={{ position: 'absolute', right: 0, top: 46, width: 320, zIndex: 30, padding: 10 }}>
-                    <div style={{ fontWeight: 600, fontSize: 13, padding: '4px 6px 10px' }}>Notifications</div>
-                    {NOTIFICATIONS.map(n => {
-                      const Icon = n.icon;
-                      return (
-                        <div key={n.id} className="mb-flex mb-gap-12" style={{ alignItems: 'flex-start', padding: '9px 6px', borderTop: '1px solid var(--hairline)' }}>
-                          <Icon size={15} color="var(--brass-bright)" style={{ marginTop: 2, flexShrink: 0 }} />
-                          <div>
-                            <div style={{ fontSize: 12.5, fontWeight: 600 }}>{n.title}</div>
-                            <div className="mb-muted" style={{ fontSize: 11.5, marginTop: 1 }}>{n.body}</div>
-                            <div className="mb-muted" style={{ fontSize: 10.5, marginTop: 3 }}>{n.time}</div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-              <div style={{ position: 'relative' }}>
-                <button className="mb-avatar" onClick={() => { setAvatarOpen(!avatarOpen); setNotifOpen(false); }} type="button">
-                  {profile.name.split(' ').map(n => n[0]).join('')}
-                </button>
-                {avatarOpen && (
-                  <div className="mb-card" style={{ position: 'absolute', right: 0, top: 46, width: 200, zIndex: 30, padding: 8 }}>
-                    <div style={{ padding: '8px 10px' }}>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>{profile.name}</div>
-                      <div className="mb-muted" style={{ fontSize: 11.5 }}>{profile.email}</div>
-                    </div>
-                    <button className="mb-nav-item" onClick={() => goPage('settings')} type="button"><User size={15} /> Profile & settings</button>
-                    <button className="mb-nav-item" onClick={() => { setLoggedIn(false); setAuthView('home'); }} type="button"><LogOut size={15} /> Sign out</button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+  let html = '<div>';
+  html += '<div class="mb-hero"><div class="mb-hero-label"><span>Total available balance</span>' +
+    '<button type="button" class="mb-eye-btn" onclick="toggleHide()">' + icon(state.hide ? 'eyeOff' : 'eye', 14) + '</button></div>' +
+    '<div class="mb-hero-amount"><span class="num">' + (state.hide ? '••••••••' : ('$' + totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))) + '</span>' +
+    '<span class="mb-hero-delta">' + icon('trendUp', 12) + ' 2.4% this month</span></div>' +
+    '<div class="mb-muted" style="font-size:12.5px">Good to see you, ' + state.profile.name.split(' ')[0] + '. Here is where things stand today.</div></div>';
+  html += '<div class="mb-ledger-rule"></div>';
 
-          <div className="mb-content">
-            {page === 'dashboard' && <Dashboard accounts={accounts} transactions={transactions} hide={hide} setHide={setHide} setPage={goPage} setModal={setModal} name={profile.name} goals={goals} creditScore={creditScore} />}
-            {page === 'accounts' && <AccountsPage accounts={accounts} transactions={transactions} hide={hide} setPage={goPage} setTxFilter={setTxFilter} />}
-            {page === 'transactions' && <TransactionsPage transactions={transactions} accounts={accounts} initialFilter={txFilter} />}
-            {page === 'transfers' && <TransfersPage accounts={accounts} doTransfer={doTransfer} doP2P={doP2P} />}
-            {page === 'cards' && <CardsPage cards={cards} accounts={accounts} toggleFreeze={toggleFreeze} setModal={setModal} />}
-            {page === 'billpay' && <BillPayPage payees={payees} accounts={accounts} toggleAutopay={toggleAutopay} payNow={payNow} addPayee={addPayee} />}
-            {page === 'budget' && <BudgetPage transactions={transactions} />}
-            {page === 'statements' && <StatementsPage />}
-            {page === 'support' && <SupportPage addToast={addToast} />}
-            {page === 'settings' && <SettingsPage profile={profile} setProfile={setProfile} theme={theme} setTheme={setTheme} addToast={addToast} />}
-          </div>
-        </main>
-      </div>
+  html += '<div class="mb-grid-3 mb-mb-24">' + accounts.map(a => accountVisualCard(a)).join('') + '</div>';
 
-      <div className="mb-mobile-nav">
-        {NAV_ITEMS.slice(0, 5).map(item => {
-          const Icon = item.icon;
-          return (
-            <button key={item.id} className={mobilePage === item.id ? 'active' : ''} onClick={() => goPage(item.id)} type="button">
-              <Icon size={18} /> {item.label}
-            </button>
-          );
-        })}
-      </div>
+  html += '<div class="mb-quick-actions mb-mb-24">' +
+    '<button type="button" class="mb-quick-btn" onclick="goPage(\'transfers\')"><div class="mb-quick-icon">' + icon('arrowLeftRight', 17) + '</div>' +
+    '<div><div style="font-weight:600;font-size:13.5px">Transfer money</div><div class="mb-muted" style="font-size:11.5px">Between accounts or to someone</div></div></button>' +
+    '<button type="button" class="mb-quick-btn" onclick="goPage(\'billpay\')"><div class="mb-quick-icon">' + icon('send', 17) + '</div>' +
+    '<div><div style="font-weight:600;font-size:13.5px">Pay a bill</div><div class="mb-muted" style="font-size:11.5px">' + payees.length + ' payees on file</div></div></button>' +
+    '<button type="button" class="mb-quick-btn" onclick="goPage(\'cards\')"><div class="mb-quick-icon">' + icon('snowflake', 17) + '</div>' +
+    '<div><div style="font-weight:600;font-size:13.5px">Freeze a card</div><div class="mb-muted" style="font-size:11.5px">Instant, reversible</div></div></button>' +
+    '<button type="button" class="mb-quick-btn" onclick="openModal(\'deposit\')"><div class="mb-quick-icon">' + icon('wallet', 17) + '</div>' +
+    '<div><div style="font-weight:600;font-size:13.5px">Deposit a check</div><div class="mb-muted" style="font-size:11.5px">Snap a photo to deposit</div></div></button>' +
+  '</div>';
 
-      {modal === 'deposit' && (
-        <Modal title="Deposit a check" onClose={() => setModal(null)}>
-          <div style={{ textAlign: 'center', padding: '10px 0' }}>
-            <div className="mb-muted" style={{ fontSize: 13, marginBottom: 18 }}>Mobile check deposit uses your camera to capture the front and back of a check. This is simulated in the demo.</div>
-            <button className="mb-btn mb-btn-primary block" onClick={() => { setModal(null); addToast('Check deposit simulated — funds available in 1-2 business days.'); }} type="button">Simulate deposit</button>
-          </div>
-        </Modal>
-      )}
-      {modal && modal.type === 'lost' && (
-        <Modal title="Report card lost or stolen" onClose={() => setModal(null)}>
-          <div className="mb-muted" style={{ fontSize: 13, marginBottom: 18 }}>We'll immediately lock •••• {modal.card.last4} and overnight a replacement card, free of charge.</div>
-          <button className="mb-btn mb-btn-danger block" onClick={() => { toggleFreeze(modal.card.id); setModal(null); addToast('Card reported and locked. A replacement is on its way.'); }} type="button">Confirm report</button>
-        </Modal>
-      )}
+  html += '<div class="mb-grid-2">' +
+    '<div class="mb-card"><div class="mb-section-head"><h2>Cash flow, last 6 months</h2></div><div class="mb-ledger-rule"></div>' +
+    '<div style="height:220px">' + miniAreaChart(TREND) + '</div>' +
+    '<div class="mb-flex mb-gap-12" style="font-size:11.5px">' +
+      '<span class="mb-flex mb-gap-8"><span class="mb-cat-dot" style="background:#45BE94"></span>Income</span>' +
+      '<span class="mb-flex mb-gap-8"><span class="mb-cat-dot" style="background:#E27467"></span>Spending</span>' +
+    '</div></div>' +
+    '<div class="mb-card"><div class="mb-section-head"><h2>Recent activity</h2>' +
+    '<button type="button" class="mb-link" onclick="goPage(\'transactions\')">View all ' + icon('chevronRight', 13) + '</button></div><div class="mb-ledger-rule"></div>' +
+    recent.map(t => txRow(t)).join('') + '</div>' +
+  '</div>';
 
-      <Toasts toasts={toasts} />
-    </div>
-  );
+  html += '<div class="mb-grid-2 mb-mt-24">' +
+    '<div class="mb-card"><div class="mb-section-head"><h2>Savings goals</h2></div><div class="mb-ledger-rule"></div>' +
+    GOALS.map(g => {
+      const pct = Math.min(100, (g.saved / g.target) * 100);
+      return '<div class="mb-flex mb-gap-12 mb-mb-16">' +
+        '<div class="mb-goal-ring" style="background:conic-gradient(' + g.color + ' ' + (pct * 3.6) + 'deg, var(--surface-2) 0)">' +
+        '<div style="width:40px;height:40px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700">' + Math.round(pct) + '%</div></div>' +
+        '<div style="flex:1"><div style="font-size:13px;font-weight:600">' + g.name + '</div>' +
+        '<div class="mb-muted num" style="font-size:11.5px">' + money(g.saved) + ' of ' + money(g.target) + '</div></div></div>';
+    }).join('') + '</div>' +
+    '<div class="mb-card"><div class="mb-section-head"><h2>Credit score</h2></div><div class="mb-ledger-rule"></div>' +
+    '<div class="display" style="font-size:40px;font-weight:600">742</div>' +
+    '<div class="mb-muted" style="font-size:12px;margin-bottom:16px">Very good — updated Aug 1, 2026</div>' +
+    '<div class="mb-gauge-wrap"><div class="mb-gauge-marker" style="left:' + ((742 - 300) / (850 - 300) * 100) + '%"></div></div>' +
+    '<div class="mb-flex mb-muted" style="justify-content:space-between;font-size:10.5px;margin-top:6px"><span>300</span><span>850</span></div></div>' +
+  '</div>';
+
+  html += '<div class="mb-card mb-mt-24"><div class="mb-section-head"><h2>Budget snapshot</h2>' +
+    '<button type="button" class="mb-link" onclick="goPage(\'budget\')">Full breakdown ' + icon('chevronRight', 13) + '</button></div><div class="mb-ledger-rule"></div>' +
+    '<div class="mb-grid-3">' + topBudgets.map(b => {
+      const pct = Math.min(100, (b.spent / b.limit) * 100);
+      const color = pct > 100 ? 'var(--coral)' : pct > 70 ? 'var(--brass)' : 'var(--teal)';
+      return '<div><div class="mb-flex" style="justify-content:space-between;font-size:12.5px;margin-bottom:6px">' +
+        '<span class="mb-flex mb-gap-8">' + catDot(b.cat) + b.cat + '</span><span class="mb-muted num">' + money(b.spent) + ' / ' + money(b.limit) + '</span></div>' +
+        '<div class="mb-progress"><div class="mb-progress-fill" style="width:' + pct + '%;background:' + color + '"></div></div></div>';
+    }).join('') + '</div></div>';
+
+  html += '</div>';
+  return html;
 }
 
-const rootEl = document.getElementById('root');
-ReactDOM.createRoot(rootEl).render(<MeridianBank />);
+function accountVisualCard(a) {
+  const isCredit = a.type === 'credit';
+  return '<div class="mb-acct-card" style="background:' + a.gradient + '" onclick="goPage(\'accounts\')">' +
+    '<div><div class="mb-acct-type" style="color:#C9A15C">' + a.type + '</div><div class="mb-acct-name">' + a.name + '</div>' +
+    '<div class="mb-acct-num num">•••• ' + a.number.slice(-4) + '</div></div>' +
+    '<div class="mb-acct-balance num">' + (isCredit ? money(Math.abs(a.balance), state.hide) + ' owed' : money(a.balance, state.hide)) + '</div></div>';
+}
+function txRow(t) {
+  return '<div class="mb-tx-row"><div class="mb-tx-icon">' + icon(t.amount > 0 ? 'arrowDownLeft' : 'arrowUpRight', 15, 'style="color:' + (t.amount > 0 ? 'var(--teal)' : 'var(--muted)') + '"') + '</div>' +
+    '<div class="mb-tx-mid"><div class="mb-tx-merchant">' + esc(t.merchant) + '</div>' +
+    '<div class="mb-tx-meta">' + catDot(t.category) + t.category + ' · ' + fmtDate(t.date) + '</div></div>' +
+    '<div class="mb-tx-amt num" style="color:' + (t.amount > 0 ? 'var(--teal)' : 'var(--text)') + '">' + (state.hide ? '••••' : (t.amount > 0 ? '+' : '') + money(t.amount)) + '</div></div>';
+}
+
+/* ============================== ACCOUNTS ============================== */
+function renderAccounts() {
+  let html = '<div><div class="mb-section-head mb-mb-16"><h2 style="font-size:20px">Your accounts</h2></div><div class="mb-ledger-rule"></div>';
+  accounts.forEach(a => {
+    const txCount = transactions.filter(t => t.accountId === a.id).length;
+    html += '<div class="mb-card mb-mb-16"><div class="mb-grid-2" style="align-items:center">' +
+      '<div><div class="mb-acct-type mb-muted">' + a.type + '</div>' +
+      '<div class="display" style="font-size:19px;font-weight:600;margin-top:2px">' + a.name + '</div>' +
+      '<div class="num mb-muted" style="font-size:13px;margin-top:8px">Account •••• ' + a.number.slice(-4) + '</div>' +
+      (a.apy ? '<div class="mb-muted" style="font-size:12px;margin-top:4px">Earning ' + a.apy + '% APY</div>' : '') +
+      (a.type === 'credit' ? '<div class="mb-muted" style="font-size:12px;margin-top:4px">Limit ' + money(a.limit) + ' · Available ' + money(a.limit - Math.abs(a.balance)) + '</div>' : '') +
+      '<div class="mb-flex mb-gap-8" style="margin-top:14px">' +
+      '<button type="button" class="mb-btn mb-btn-secondary sm" onclick="goPage(\'transfers\')">' + icon('arrowLeftRight', 13) + ' Transfer</button>' +
+      '<button type="button" class="mb-btn mb-btn-ghost sm" onclick="goPage(\'transactions\')">' + txCount + ' transactions ' + icon('chevronRight', 13) + '</button></div></div>' +
+      '<div style="text-align:right"><div class="mb-muted" style="font-size:12px">' + (a.type === 'credit' ? 'Current balance owed' : 'Available balance') + '</div>' +
+      '<div class="num display" style="font-size:30px;font-weight:600;color:' + (a.type === 'credit' ? 'var(--coral)' : 'var(--text)') + '">' +
+      money(a.type === 'credit' ? Math.abs(a.balance) : a.balance, state.hide) + '</div></div></div></div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+/* ============================== TRANSACTIONS ============================== */
+function transactionRows() {
+  const account = document.getElementById('tx-account') ? document.getElementById('tx-account').value : 'all';
+  const category = document.getElementById('tx-category') ? document.getElementById('tx-category').value : 'all';
+  const search = document.getElementById('tx-search') ? document.getElementById('tx-search').value : '';
+  return transactions.filter(t =>
+    (account === 'all' || t.accountId === account) &&
+    (category === 'all' || t.category === category) &&
+    (search === '' || t.merchant.toLowerCase().indexOf(search.toLowerCase()) !== -1)
+  );
+}
+function filterTransactions() {
+  const filtered = transactionRows();
+  document.getElementById('tx-tbody').innerHTML = filtered.map(t =>
+    '<tr><td class="mb-muted">' + fmtDate(t.date) + '</td><td>' + esc(t.merchant) + '</td>' +
+    '<td><span class="mb-flex mb-gap-8">' + catDot(t.category) + t.category + '</span></td>' +
+    '<td class="mb-muted">' + (accounts.find(a => a.id === t.accountId) || {}).name + '</td>' +
+    '<td><span class="mb-badge ' + (t.status === 'pending' ? 'pending' : 'ok') + '">' + t.status + '</span></td>' +
+    '<td class="num" style="text-align:right;color:' + (t.amount > 0 ? 'var(--teal)' : 'var(--text)') + '">' + (t.amount > 0 ? '+' : '') + money(t.amount) + '</td></tr>'
+  ).join('') || '<tr><td colspan="6"><div class="mb-empty">No transactions match these filters.</div></td></tr>';
+  document.getElementById('tx-count').textContent = filtered.length + ' transactions';
+}
+function exportCSV() {
+  const filtered = transactionRows();
+  const rows = [['Date', 'Merchant', 'Category', 'Account', 'Amount', 'Status']];
+  filtered.forEach(t => rows.push([t.date, t.merchant, t.category, t.accountId, t.amount, t.status]));
+  const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'meridian-transactions.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+function renderTransactions() {
+  const categories = Array.from(new Set(transactions.map(t => t.category)));
+  const filtered = transactionRows();
+  return '<div><div class="mb-section-head mb-mb-16"><h2 style="font-size:20px">Transactions</h2>' +
+    '<button type="button" class="mb-btn mb-btn-secondary sm" onclick="exportCSV()">' + icon('download', 13) + ' Export CSV</button></div><div class="mb-ledger-rule"></div>' +
+    '<div class="mb-card mb-mb-16"><div class="mb-row">' +
+      '<div class="mb-field" style="margin-bottom:0"><label>Account</label><select class="mb-select" id="tx-account" onchange="filterTransactions()">' +
+      '<option value="all">All accounts</option>' + accounts.map(a => '<option value="' + a.id + '">' + a.name + '</option>').join('') + '</select></div>' +
+      '<div class="mb-field" style="margin-bottom:0"><label>Category</label><select class="mb-select" id="tx-category" onchange="filterTransactions()">' +
+      '<option value="all">All categories</option>' + categories.map(c => '<option value="' + c + '">' + c + '</option>').join('') + '</select></div>' +
+      '<div class="mb-field" style="margin-bottom:0"><label>Search</label><input class="mb-input" id="tx-search" placeholder="Merchant name…" oninput="filterTransactions()"/></div>' +
+    '</div></div>' +
+    '<div class="mb-card pad-0"><div style="overflow-x:auto;padding:18px 20px"><table class="mb-table">' +
+    '<thead><tr><th>Date</th><th>Merchant</th><th>Category</th><th>Account</th><th>Status</th><th class="num">Amount</th></tr></thead>' +
+    '<tbody id="tx-tbody">' + filtered.map(t =>
+      '<tr><td class="mb-muted">' + fmtDate(t.date) + '</td><td>' + esc(t.merchant) + '</td>' +
+      '<td><span class="mb-flex mb-gap-8">' + catDot(t.category) + t.category + '</span></td>' +
+      '<td class="mb-muted">' + (accounts.find(a => a.id === t.accountId) || {}).name + '</td>' +
+      '<td><span class="mb-badge ' + (t.status === 'pending' ? 'pending' : 'ok') + '">' + t.status + '</span></td>' +
+      '<td class="num" style="text-align:right;color:' + (t.amount > 0 ? 'var(--teal)' : 'var(--text)') + '">' + (t.amount > 0 ? '+' : '') + money(t.amount) + '</td></tr>'
+    ).join('') + '</tbody></table></div></div>' +
+    '<div class="mb-muted" style="font-size:12px;margin-top:10px" id="tx-count">' + filtered.length + ' transactions</div></div>';
+}
+/* ============================== TRANSFERS ============================== */
+function setTransferMode(m) { state.transfer = { mode: m, step: 'form', error: '' }; render(); }
+function reviewTransfer(e) {
+  e.preventDefault();
+  const t = state.transfer;
+  const from = document.getElementById('tf-from').value;
+  const amount = parseFloat(document.getElementById('tf-amount').value);
+  const memo = document.getElementById('tf-memo').value;
+  const fromAcct = accounts.find(a => a.id === from);
+  let to = null, recipient = '';
+  if (t.mode === 'internal') { to = document.getElementById('tf-to').value; }
+  else { recipient = document.getElementById('tf-recipient').value; }
+
+  if (!amount || amount <= 0) { t.error = 'Enter an amount greater than $0.'; render(); return false; }
+  if (t.mode === 'internal' && from === to) { t.error = 'Choose two different accounts.'; render(); return false; }
+  if (amount > fromAcct.balance) { t.error = 'That exceeds the available balance on this account.'; render(); return false; }
+  if (t.mode === 'p2p' && !recipient) { t.error = 'Enter a recipient name.'; render(); return false; }
+
+  state.transfer = { mode: t.mode, step: 'review', from: from, to: to, amount: amount, memo: memo, recipient: recipient, error: '' };
+  render();
+  return false;
+}
+function confirmTransfer() {
+  const t = state.transfer;
+  if (t.mode === 'internal') doTransfer(t.from, t.to, t.amount, t.memo);
+  else doP2P(t.from, t.recipient, t.amount, t.memo);
+  state.transfer.step = 'success';
+  render();
+}
+function backTransfer() { state.transfer.step = 'form'; render(); }
+function resetTransfer() { state.transfer = { mode: state.transfer.mode, step: 'form', error: '' }; render(); }
+function doTransfer(fromId, toId, amount, memo) {
+  updateBalance(fromId, -amount);
+  updateBalance(toId, amount);
+  const fromName = accounts.find(a => a.id === fromId).name;
+  const toName = accounts.find(a => a.id === toId).name;
+  const today = new Date().toISOString().slice(0, 10);
+  transactions = [
+    { id: uid(), date: today, merchant: 'Transfer to ' + toName, category: 'Transfer', accountId: fromId, amount: -amount, status: 'posted' },
+    { id: uid(), date: today, merchant: 'Transfer from ' + fromName, category: 'Transfer', accountId: toId, amount: amount, status: 'posted' },
+  ].concat(transactions);
+  addToast('Transferred ' + money(amount) + ' to ' + toName + '.');
+}
+function doP2P(fromId, recipient, amount, memo) {
+  updateBalance(fromId, -amount);
+  const today = new Date().toISOString().slice(0, 10);
+  transactions = [{ id: uid(), date: today, merchant: 'Sent to ' + recipient, category: 'Transfer', accountId: fromId, amount: -amount, status: 'posted' }].concat(transactions);
+  addToast('Sent ' + money(amount) + ' to ' + recipient + '.');
+}
+function renderTransfers() {
+  const t = state.transfer;
+  let inner = '';
+  if (t.step === 'form') {
+    const availableTo = accounts.filter(a => a.type !== 'credit');
+    inner = '<div class="mb-tabs mb-mb-24">' +
+      '<button type="button" class="mb-tab' + (t.mode === 'internal' ? ' active' : '') + '" onclick="setTransferMode(\'internal\')">Between my accounts</button>' +
+      '<button type="button" class="mb-tab' + (t.mode === 'p2p' ? ' active' : '') + '" onclick="setTransferMode(\'p2p\')">Send to someone</button>' +
+    '</div>' +
+    '<form onsubmit="return reviewTransfer(event)">' +
+      '<div class="mb-field"><label>From</label><select class="mb-select" id="tf-from">' +
+      accounts.map(a => '<option value="' + a.id + '">' + a.name + ' — ' + money(a.balance) + '</option>').join('') + '</select></div>' +
+      (t.mode === 'internal'
+        ? '<div class="mb-field"><label>To</label><select class="mb-select" id="tf-to">' + availableTo.map(a => '<option value="' + a.id + '">' + a.name + '</option>').join('') + '</select></div>'
+        : '<div class="mb-field"><label>Recipient name</label><input class="mb-input" id="tf-recipient" placeholder="e.g. Kojo Boateng"/></div>' +
+          '<div class="mb-field"><label>Email or phone</label><input class="mb-input" id="tf-recipient-contact" placeholder="email@example.com"/></div>') +
+      '<div class="mb-field"><label>Amount</label><input class="mb-input num" id="tf-amount" type="number" step="0.01" min="0" placeholder="0.00"/></div>' +
+      '<div class="mb-field"><label>Memo (optional)</label><input class="mb-input" id="tf-memo" placeholder="What is this for?"/></div>' +
+      (t.error ? '<div style="color:var(--coral);font-size:12.5px;margin-bottom:12px">' + t.error + '</div>' : '') +
+      '<button class="mb-btn mb-btn-primary block" type="submit">Review transfer</button>' +
+    '</form>';
+  } else if (t.step === 'review') {
+    const fromAcct = accounts.find(a => a.id === t.from);
+    const toLabel = t.mode === 'internal' ? accounts.find(a => a.id === t.to).name : t.recipient;
+    inner = '<div class="mb-muted" style="font-size:12.5px;margin-bottom:14px">Review and confirm</div>' +
+      '<div class="mb-flex" style="justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--hairline)"><span class="mb-muted">From</span><span>' + fromAcct.name + '</span></div>' +
+      '<div class="mb-flex" style="justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--hairline)"><span class="mb-muted">To</span><span>' + toLabel + '</span></div>' +
+      (t.memo ? '<div class="mb-flex" style="justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--hairline)"><span class="mb-muted">Memo</span><span>' + esc(t.memo) + '</span></div>' : '') +
+      '<div class="mb-flex" style="justify-content:space-between;padding:10px 0"><span class="mb-muted">Amount</span><span class="num display" style="font-size:20px;font-weight:600">' + money(t.amount) + '</span></div>' +
+      '<div class="mb-flex mb-gap-12 mb-mt-16">' +
+        '<button type="button" class="mb-btn mb-btn-secondary block" onclick="backTransfer()">Back</button>' +
+        '<button type="button" class="mb-btn mb-btn-primary block" onclick="confirmTransfer()">Confirm & send</button>' +
+      '</div>';
+  } else {
+    inner = '<div style="text-align:center;padding:20px 0">' +
+      '<div style="width:54px;height:54px;border-radius:50%;background:color-mix(in srgb, var(--teal) 18%, transparent);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">' + icon('check', 26, 'style="color:var(--teal)"') + '</div>' +
+      '<div class="display" style="font-size:19px;font-weight:600">Transfer complete</div>' +
+      '<div class="mb-muted" style="font-size:13px;margin:6px 0 20px">' + money(t.amount) + ' sent successfully.</div>' +
+      '<button type="button" class="mb-btn mb-btn-secondary block" onclick="resetTransfer()">Make another transfer</button></div>';
+  }
+  return '<div><div class="mb-section-head mb-mb-16"><h2 style="font-size:20px">Transfers</h2></div><div class="mb-ledger-rule"></div>' +
+    '<div class="mb-card" style="max-width:480px">' + inner + '</div></div>';
+}
+
+/* ============================== CARDS ============================== */
+function toggleFreeze(cardId) {
+  cards = cards.map(c => c.id === cardId ? Object.assign({}, c, { frozen: !c.frozen }) : c);
+  const card = cards.find(c => c.id === cardId);
+  addToast(card.frozen ? 'Card frozen.' : 'Card unfrozen.');
+  render();
+}
+function toggleCvv(cardId) { state.revealCvv[cardId] = !state.revealCvv[cardId]; render(); }
+function renderCards() {
+  let html = '<div><div class="mb-section-head mb-mb-16"><h2 style="font-size:20px">Your cards</h2></div><div class="mb-ledger-rule"></div><div class="mb-grid-2">';
+  cards.forEach(c => {
+    const acct = accounts.find(a => a.id === c.accountId);
+    html += '<div><div class="mb-plastic" style="background:' + (c.dark ? 'linear-gradient(155deg, #171313, #2b2015)' : 'linear-gradient(155deg, #1A2740, #24365A)') + ';position:relative">' +
+      (c.frozen ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);border-radius:18px"></div>' : '') +
+      '<div class="mb-plastic-top"><div class="mb-plastic-chip"></div><div style="font-size:13px;font-weight:700;letter-spacing:.03em">' + c.network + '</div></div>' +
+      '<div><div class="mb-plastic-num">•••• •••• •••• ' + c.last4 + '</div>' +
+      '<div class="mb-plastic-bottom mb-mt-8"><div><div style="opacity:.7;font-size:9px">CARD HOLDER</div><div>' + c.holder + '</div></div>' +
+      '<div><div style="opacity:.7;font-size:9px">EXPIRES</div><div class="num">' + c.expiry + '</div></div></div></div>' +
+      (c.frozen ? '<div class="mb-plastic-frozen-badge" style="z-index:2">' + icon('snowflake', 16) + ' Card frozen</div>' : '') +
+      '</div>' +
+      '<div class="mb-card mb-mt-16"><div class="mb-flex" style="justify-content:space-between">' +
+      '<div><div style="font-weight:600;font-size:13.5px">' + (c.type === 'debit' ? 'Debit card' : 'Credit card') + '</div>' +
+      '<div class="mb-muted" style="font-size:12px">Linked to ' + (acct ? acct.name : '') + '</div></div>' +
+      '<div class="mb-flex mb-gap-8"><span class="mb-muted" style="font-size:12px">' + (c.frozen ? 'Frozen' : 'Active') + '</span>' + switchHtml(!c.frozen, "toggleFreeze('" + c.id + "')") + '</div></div>' +
+      '<div class="mb-flex mb-gap-8 mb-mt-16">' +
+      '<button type="button" class="mb-btn mb-btn-secondary sm" onclick="toggleCvv(\'' + c.id + '\')">' + (state.revealCvv[c.id] ? 'Hide CVV · 482' : 'Show CVV') + '</button>' +
+      '<button type="button" class="mb-btn mb-btn-ghost sm" onclick="openModal(\'lost\', \'' + c.id + '\')">Report lost or stolen</button>' +
+      '</div></div></div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+/* ============================== BILL PAY ============================== */
+function toggleAutopay(payeeId) {
+  payees = payees.map(p => p.id === payeeId ? Object.assign({}, p, { autopay: !p.autopay }) : p);
+  render();
+}
+function payNow(payeeId, fromAccountId, amount) {
+  const payee = payees.find(p => p.id === payeeId);
+  if (!payee || !amount || amount <= 0) return;
+  updateBalance(fromAccountId, -amount);
+  const today = new Date().toISOString().slice(0, 10);
+  transactions = [{ id: uid(), date: today, merchant: payee.name, category: payee.category, accountId: fromAccountId, amount: -amount, status: 'posted' }].concat(transactions);
+  addToast('Paid ' + money(amount) + ' to ' + payee.name + '.');
+}
+function confirmPay() {
+  const payeeId = state.modal.payeeId;
+  const from = document.getElementById('pay-from').value;
+  const amount = parseFloat(document.getElementById('pay-amount').value);
+  payNow(payeeId, from, amount);
+  state.modal = null;
+  render();
+}
+function submitAddPayee(e) {
+  e.preventDefault();
+  const name = document.getElementById('payee-name').value;
+  const cat = document.getElementById('payee-cat').value;
+  if (!name) return false;
+  payees = payees.concat([{ id: uid(), name: name, category: cat, avgAmount: 0, nextDue: new Date().toISOString().slice(0, 10), autopay: false }]);
+  addToast('Payee added.');
+  state.modal = null;
+  render();
+  return false;
+}
+function renderBillPay() {
+  let html = '<div><div class="mb-section-head mb-mb-16"><h2 style="font-size:20px">Bill pay</h2>' +
+    '<button type="button" class="mb-btn mb-btn-secondary sm" onclick="openModal(\'addPayee\')">' + icon('plus', 13) + ' Add a payee</button></div><div class="mb-ledger-rule"></div>' +
+    '<div class="mb-card pad-0">';
+  payees.forEach((p, i) => {
+    html += '<div style="padding:16px 20px;' + (i < payees.length - 1 ? 'border-bottom:1px solid var(--hairline)' : '') + '">' +
+      '<div class="mb-flex" style="justify-content:space-between">' +
+      '<div class="mb-flex mb-gap-12"><div class="mb-tx-icon">' + icon('receipt', 16, 'style="color:var(--brass-bright)"') + '</div>' +
+      '<div><div style="font-weight:600;font-size:13.5px">' + esc(p.name) + '</div>' +
+      '<div class="mb-tx-meta">' + catDot(p.category) + p.category + ' · Due ' + fmtDate(p.nextDue) + ' · ~' + money(p.avgAmount) + '</div></div></div>' +
+      '<div class="mb-flex mb-gap-12"><div class="mb-flex mb-gap-8 mb-muted" style="font-size:11.5px"><span>Autopay</span>' + switchHtml(p.autopay, "toggleAutopay('" + p.id + "')") + '</div>' +
+      '<button type="button" class="mb-btn mb-btn-primary sm" onclick="openModal(\'pay\', \'' + p.id + '\')">Pay now</button></div></div></div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+/* ============================== BUDGET ============================== */
+function renderBudget() {
+  const spentByCat = {};
+  transactions.forEach(t => { if (t.amount < 0) spentByCat[t.category] = (spentByCat[t.category] || 0) + Math.abs(t.amount); });
+  const pieData = Object.keys(spentByCat).map(name => ({ name: name, value: spentByCat[name] })).sort((a, b) => b.value - a.value);
+  const budgets = Object.keys(BUDGET_LIMITS).map(cat => ({ cat: cat, limit: BUDGET_LIMITS[cat], spent: spentByCat[cat] || 0 }));
+  const overBudget = budgets.find(b => b.spent > b.limit);
+
+  let html = '<div><div class="mb-section-head mb-mb-16"><h2 style="font-size:20px">Budget & analytics</h2></div><div class="mb-ledger-rule"></div>';
+  html += '<div class="mb-grid-2 mb-mb-24">' +
+    '<div class="mb-card"><div class="mb-section-head"><h2>Where it is going</h2></div><div class="mb-ledger-rule"></div>' +
+    '<div style="height:240px">' + miniDonut(pieData) + '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11.5px">' +
+    pieData.map(p => '<span class="mb-flex mb-gap-8">' + catDot(p.name) + p.name + '<span class="mb-muted num" style="margin-left:auto">' + money(p.value) + '</span></span>').join('') +
+    '</div></div>' +
+    '<div class="mb-card"><div class="mb-section-head"><h2>Income vs. spending</h2></div><div class="mb-ledger-rule"></div>' +
+    '<div style="height:240px">' + miniBarChart(TREND) + '</div></div>' +
+  '</div>';
+
+  if (overBudget) {
+    html += '<div class="mb-card mb-mb-24" style="border-color:color-mix(in srgb, var(--coral) 40%, transparent)"><div class="mb-flex mb-gap-12">' +
+      icon('alert', 18, 'style="color:var(--coral)"') + '<div style="font-size:13px">You are ' + money(overBudget.spent - overBudget.limit) + ' over your ' + overBudget.cat + ' budget this cycle.</div></div></div>';
+  }
+
+  html += '<div class="mb-card"><div class="mb-section-head"><h2>Budgets this cycle</h2></div><div class="mb-ledger-rule"></div>';
+  budgets.forEach(b => {
+    const pct = Math.min(100, (b.spent / b.limit) * 100);
+    const color = b.spent > b.limit ? 'var(--coral)' : pct > 70 ? 'var(--brass)' : 'var(--teal)';
+    html += '<div class="mb-mb-16"><div class="mb-flex" style="justify-content:space-between;font-size:12.5px;margin-bottom:6px">' +
+      '<span class="mb-flex mb-gap-8">' + catDot(b.cat) + b.cat + '</span><span class="mb-muted num">' + money(b.spent) + ' of ' + money(b.limit) + '</span></div>' +
+      '<div class="mb-progress"><div class="mb-progress-fill" style="width:' + pct + '%;background:' + color + '"></div></div></div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+/* ============================== STATEMENTS ============================== */
+function downloadStatement(id) {
+  const doc = STATEMENTS.find(s => s.id === id);
+  if (!doc) return;
+  const content = 'Meridian Bank\\n' + doc.label + '\\nAccount: ' + doc.account + '\\nIssued: ' + doc.date + '\\n\\nThis is a simulated document for demo purposes.';
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = doc.label.replace(/\\s+/g, '-') + '.txt'; a.click();
+  URL.revokeObjectURL(url);
+}
+function renderStatements() {
+  return '<div><div class="mb-section-head mb-mb-16"><h2 style="font-size:20px">Statements & documents</h2></div><div class="mb-ledger-rule"></div>' +
+    '<div class="mb-card pad-0">' + STATEMENTS.map(doc =>
+      '<div class="mb-doc-row"><div class="mb-tx-icon">' + icon('file', 16, 'style="color:var(--brass-bright)"') + '</div>' +
+      '<div style="flex:1"><div style="font-weight:600;font-size:13.5px">' + doc.label + '</div>' +
+      '<div class="mb-muted" style="font-size:11.5px">' + doc.account + ' · Issued ' + fmtDate(doc.date) + '</div></div>' +
+      '<button type="button" class="mb-btn mb-btn-secondary sm" onclick="downloadStatement(\'' + doc.id + '\')">' + icon('download', 13) + ' Download</button></div>'
+    ).join('') + '</div>' +
+    '<div class="mb-muted" style="font-size:12px;margin-top:12px">Statements are generated monthly and kept on file for 7 years, as required for account records.</div></div>';
+}
+
+/* ============================== SUPPORT ============================== */
+function toggleFaq(i) { state.openFaq = state.openFaq === i ? -1 : i; render(); }
+function sendSupportMessage(e) {
+  e.preventDefault();
+  const msg = document.getElementById('support-message').value;
+  if (!msg.trim()) return false;
+  document.getElementById('support-message').value = '';
+  addToast('Message sent — our team replies within 1 business day.');
+  return false;
+}
+function renderSupport() {
+  return '<div><div class="mb-section-head mb-mb-16"><h2 style="font-size:20px">Support</h2></div><div class="mb-ledger-rule"></div>' +
+    '<div class="mb-grid-2"><div class="mb-card"><div class="mb-section-head"><h2>Frequently asked</h2></div><div class="mb-ledger-rule"></div>' +
+    FAQS.map((f, i) => '<div class="mb-faq-item"><button type="button" class="mb-faq-q" onclick="toggleFaq(' + i + ')">' + f.q + ' ' + icon(state.openFaq === i ? 'chevronUp' : 'chevronDown', 15) + '</button>' +
+      (state.openFaq === i ? '<div class="mb-faq-a">' + f.a + '</div>' : '') + '</div>').join('') +
+    '</div><div><div class="mb-card mb-mb-16"><div class="mb-section-head"><h2>Message us</h2></div><div class="mb-ledger-rule"></div>' +
+    '<div class="mb-muted" style="font-size:12.5px;margin-bottom:12px">Secure messages are encrypted and tied to your account — no need to share sensitive details over email.</div>' +
+    '<form onsubmit="return sendSupportMessage(event)"><div class="mb-field"><textarea class="mb-input" id="support-message" rows="4" placeholder="How can we help?" style="resize:vertical;font-family:inherit"></textarea></div>' +
+    '<button class="mb-btn mb-btn-primary block" type="submit">' + icon('message', 14) + ' Send secure message</button></form></div>' +
+    '<div class="mb-card"><div class="mb-section-head"><h2>Other ways to reach us</h2></div><div class="mb-ledger-rule"></div>' +
+    '<div class="mb-muted" style="font-size:12.5px;line-height:1.8">Call 1-800-555-0182, 24/7<br/>Live chat — available in the mobile app<br/>Branch & ATM locator — find one near you</div></div>' +
+    '</div></div></div>';
+}
+
+/* ============================== SETTINGS ============================== */
+let settingsAlerts = { tx: true, lowBalance: true, marketing: false };
+let settings2FA = true;
+function saveProfile(e) {
+  e.preventDefault();
+  state.profile = {
+    name: document.getElementById('set-name').value,
+    email: document.getElementById('set-email').value,
+    phone: document.getElementById('set-phone').value,
+  };
+  addToast('Profile updated.');
+  render();
+  return false;
+}
+function toggleAlert(key) { settingsAlerts[key] = !settingsAlerts[key]; render(); }
+function toggle2FA() { settings2FA = !settings2FA; render(); }
+function changePassword() { addToast('Password change link sent to your email.'); }
+function renderSettings() {
+  const p = state.profile;
+  return '<div><div class="mb-section-head mb-mb-16"><h2 style="font-size:20px">Settings</h2></div><div class="mb-ledger-rule"></div>' +
+    '<div class="mb-grid-2"><div>' +
+    '<div class="mb-card mb-mb-16"><div class="mb-section-head"><h2>Profile</h2></div><div class="mb-ledger-rule"></div>' +
+    '<form onsubmit="return saveProfile(event)">' +
+    '<div class="mb-field"><label>Full name</label><input class="mb-input" id="set-name" value="' + esc(p.name) + '"/></div>' +
+    '<div class="mb-field"><label>Email</label><input class="mb-input" id="set-email" value="' + esc(p.email) + '"/></div>' +
+    '<div class="mb-field"><label>Phone</label><input class="mb-input" id="set-phone" value="' + esc(p.phone) + '"/></div>' +
+    '<button class="mb-btn mb-btn-primary" type="submit">Save changes</button></form></div>' +
+    '<div class="mb-card"><div class="mb-section-head"><h2>Notifications</h2></div><div class="mb-ledger-rule"></div>' +
+    [['tx', 'Transaction alerts'], ['lowBalance', 'Low balance alerts'], ['marketing', 'Product news & offers']].map(kv =>
+      '<div class="mb-flex" style="justify-content:space-between;padding:9px 0"><span style="font-size:13px">' + kv[1] + '</span>' + switchHtml(settingsAlerts[kv[0]], "toggleAlert('" + kv[0] + "')") + '</div>'
+    ).join('') + '</div></div>' +
+    '<div><div class="mb-card mb-mb-16"><div class="mb-section-head"><h2>Security</h2></div><div class="mb-ledger-rule"></div>' +
+    '<div class="mb-flex" style="justify-content:space-between;padding:9px 0"><span class="mb-flex mb-gap-8" style="font-size:13px">' + icon('shield', 14) + ' Two-factor authentication</span>' + switchHtml(settings2FA, 'toggle2FA()') + '</div>' +
+    '<div class="mb-flex" style="justify-content:space-between;padding:9px 0"><span class="mb-flex mb-gap-8" style="font-size:13px">' + icon('mail', 14) + ' Sign-in email alerts</span>' + switchHtml(true, '') + '</div>' +
+    '<button type="button" class="mb-btn mb-btn-secondary block mb-mt-16" onclick="changePassword()">Change password</button>' +
+    '<div class="mb-mt-24"><div class="mb-muted" style="font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Active sessions</div>' +
+    '<div class="mb-flex" style="justify-content:space-between;padding:8px 0;font-size:12.5px"><span class="mb-flex mb-gap-8">' + icon('smartphone', 13) + ' This device · Chrome <span class="mb-badge ok">this device</span></span><span class="mb-muted">Active now</span></div>' +
+    '<div class="mb-flex" style="justify-content:space-between;padding:8px 0;font-size:12.5px"><span class="mb-flex mb-gap-8">' + icon('smartphone', 13) + ' iPhone 15 · Meridian App</span><span class="mb-muted">2 days ago</span></div>' +
+    '</div></div>' +
+    '<div class="mb-card"><div class="mb-section-head"><h2>Appearance</h2></div><div class="mb-ledger-rule"></div>' +
+    '<div class="mb-flex" style="justify-content:space-between"><span style="font-size:13px">Dark mode</span>' + switchHtml(state.theme === 'dark', 'toggleTheme()') + '</div></div>' +
+    '</div></div></div>';
+}
+/* ============================== MODAL ============================== */
+function openModal(type, payload) {
+  if (type === 'pay') state.modal = { type: 'pay', payeeId: payload };
+  else if (type === 'lost') state.modal = { type: 'lost', cardId: payload };
+  else state.modal = { type: type };
+  render();
+}
+function closeModal() { state.modal = null; render(); }
+function simulateDeposit() { state.modal = null; render(); addToast('Check deposit simulated — funds available in 1-2 business days.'); }
+function confirmLostCard() {
+  const cardId = state.modal.cardId;
+  state.modal = null;
+  toggleFreeze(cardId);
+  addToast('Card reported and locked. A replacement is on its way.');
+}
+function renderModal() {
+  if (!state.modal) return '';
+  const m = state.modal;
+  let title = '', body = '';
+  if (m.type === 'deposit') {
+    title = 'Deposit a check';
+    body = '<div style="text-align:center;padding:10px 0">' +
+      '<div class="mb-muted" style="font-size:13px;margin-bottom:18px">Mobile check deposit uses your camera to capture the front and back of a check. This is simulated in the demo.</div>' +
+      '<button type="button" class="mb-btn mb-btn-primary block" onclick="simulateDeposit()">Simulate deposit</button></div>';
+  } else if (m.type === 'lost') {
+    const card = cards.find(c => c.id === m.cardId);
+    title = 'Report card lost or stolen';
+    body = '<div class="mb-muted" style="font-size:13px;margin-bottom:18px">We will immediately lock •••• ' + (card ? card.last4 : '') + ' and overnight a replacement card, free of charge.</div>' +
+      '<button type="button" class="mb-btn mb-btn-danger block" onclick="confirmLostCard()">Confirm report</button>';
+  } else if (m.type === 'pay') {
+    const payee = payees.find(p => p.id === m.payeeId);
+    title = 'Pay ' + (payee ? payee.name : '');
+    body = '<div class="mb-field"><label>From account</label><select class="mb-select" id="pay-from">' +
+      accounts.filter(a => a.type !== 'credit').map(a => '<option value="' + a.id + '">' + a.name + ' — ' + money(a.balance) + '</option>').join('') + '</select></div>' +
+      '<div class="mb-field"><label>Amount</label><input class="mb-input num" id="pay-amount" type="number" step="0.01" value="' + (payee ? payee.avgAmount : 0) + '"/></div>' +
+      '<button type="button" class="mb-btn mb-btn-primary block" onclick="confirmPay()">Confirm payment</button>';
+  } else if (m.type === 'addPayee') {
+    title = 'Add a payee';
+    const catOptions = Object.keys(CATEGORY_COLORS).map(c => '<option value="' + c + '">' + c + '</option>').join('');
+    body = '<form onsubmit="return submitAddPayee(event)">' +
+      '<div class="mb-field"><label>Payee name</label><input class="mb-input" id="payee-name" placeholder="e.g. State Farm Insurance"/></div>' +
+      '<div class="mb-field"><label>Category</label><select class="mb-select" id="payee-cat">' + catOptions + '</select></div>' +
+      '<button class="mb-btn mb-btn-primary block" type="submit">Add payee</button></form>';
+  }
+  return '<div class="mb-modal-overlay" onclick="if(event.target===event.currentTarget) closeModal()">' +
+    '<div class="mb-modal"><div class="mb-modal-head"><h3>' + title + '</h3>' +
+    '<button type="button" class="mb-icon-btn" onclick="closeModal()">' + icon('x', 16) + '</button></div>' +
+    body + '</div></div>';
+}
+
+/* ============================== INIT ============================== */
+render();
 </script>
 </body>
 </html>
